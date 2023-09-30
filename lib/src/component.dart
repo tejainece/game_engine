@@ -106,6 +106,8 @@ class HexComponent implements Component, CanHitTest {
 }
 
 class BorderPainter {
+  BorderAlign align = BorderAlign.center;
+
   BorderPainter({required Color color, required double strokeWidth}) {
     this.color = color;
     this.strokeWidth = strokeWidth;
@@ -117,5 +119,7 @@ class BorderPainter {
   set color(Color value) => paint.color = value;
 
   double get strokeWidth => paint.strokeWidth;
-  set strokeWidth(double value) => paint.strokeWidth = strokeWidth;
+  set strokeWidth(double value) => paint.strokeWidth = value;
 }
+
+enum BorderAlign {inside, center, outside}
