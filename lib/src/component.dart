@@ -6,9 +6,9 @@ abstract class Component {
 
   void dispose();
 
-  bool tick(Duration timestamp);
+  bool tick(Duration timestamp, Duration diff);
 
-  void handleEvent(PointerEvent event);
+  void handlePointerEvent(PointerEvent event);
 }
 
 class BlockTicks implements Component {
@@ -25,10 +25,15 @@ class BlockTicks implements Component {
   void dispose() {}
 
   @override
-  bool tick(Duration timestamp) => false;
+  bool tick(Duration timestamp, Duration delta) => false;
 
   @override
-  void handleEvent(PointerEvent event) => child.handleEvent(event);
+  void handlePointerEvent(PointerEvent event) => child.handlePointerEvent(event);
+}
+
+mixin BlockTicksMixin on Component {
+  @override
+  bool tick(Duration timestamp, Duration delta) => false;
 }
 
 class HexComponent implements Component, CanHitTest {
@@ -99,10 +104,10 @@ class HexComponent implements Component, CanHitTest {
   void dispose() {}
 
   @override
-  bool tick(Duration timestamp) => false;
+  bool tick(Duration timestamp, Duration delta) => false;
 
   @override
-  void handleEvent(PointerEvent event) {}
+  void handlePointerEvent(PointerEvent event) {}
 }
 
 class BorderPainter {

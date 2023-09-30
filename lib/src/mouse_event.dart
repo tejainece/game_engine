@@ -7,6 +7,10 @@ class MouseInteraction implements Component, CanHitTest {
 
   VoidCallback? onTap;
 
+  VoidCallback? onLongPress;
+
+  VoidCallback? onShortPress;
+
   MouseInteraction({required this.child, this.onTap});
 
   @override
@@ -23,51 +27,111 @@ class MouseInteraction implements Component, CanHitTest {
   }
 
   @override
-  bool tick(Duration timestamp) => child.tick(timestamp);
+  bool tick(Duration timestamp, Duration delta) => child.tick(timestamp, delta);
 
-  late final _tapRecognizer = TapRecognizer(this);
+  late final _tapDetector = TapDetector(this);
+
+  late final _longPressDetector = TapDetector.longPress(this);
+
+  late final _shortPressDetector = TapDetector.shortPress(this);
 
   @override
-  void handleEvent(PointerEvent event) {
+  void handlePointerEvent(PointerEvent event) {
     if (onTap != null) {
-      if (_tapRecognizer.handleEvent(event)) {
+      if (_tapDetector.handleEvent(event)) {
         onTap!.call();
       }
     }
-    child.handleEvent(event);
+    if (onLongPress != null) {
+      if (_longPressDetector.handleEvent(event)) {
+        onLongPress!.call();
+      }
+    }
+    if(onShortPress != null) {
+      if(_shortPressDetector.handleEvent(event)) {
+        onShortPress!.call();
+      }
+    }
+    child.handlePointerEvent(event);
   }
 }
 
-class TapRecognizer {
-  PointerEvent? _down;
+class BlockPointerEvents implements Component {
+  final Component child;
+
+  BlockPointerEvents(this.child);
+  
+  @override
+  void paint(Canvas canvas) => child.paint(canvas);
+
+  @override
+  void dispose() {
+    child.dispose();
+  }
+
+  @override
+  bool tick(Duration timestamp, Duration delta) => child.tick(timestamp, delta);
+
+  @override
+  void handlePointerEvent(PointerEvent event) {}
+}
+
+mixin BlockPointerMixin on Component {
+  @override
+  void handlePointerEvent(PointerEvent event) {}
+}
+
+class TapDetector {
+  ({PointerEvent event, DateTime start})? _down;
 
   final CanHitTest component;
 
-  TapRecognizer(this.component);
+  Duration? tapDurationLessThan;
+  Duration? tapDurationGreaterThan;
+
+  TapDetector(this.component,
+      {this.tapDurationLessThan, this.tapDurationGreaterThan});
+
+  TapDetector.longPress(this.component,
+      {this.tapDurationGreaterThan = longPressDuration});
+
+  TapDetector.shortPress(this.component,
+      {this.tapDurationLessThan = shortPressDuration});
 
   bool handleEvent(PointerEvent event) {
     final point = event.localPosition;
 
     if (event is PointerDownEvent) {
       if (component.hitTest(point)) {
-        _down = event;
+        _down = (event: event, start: DateTime.now());
+      } else {
+        _down = null;
       }
     } else if (event is PointerUpEvent) {
       if (component.hitTest(point) &&
           _down != null &&
-          event.pointer == _down!.pointer) {
+          event.pointer == _down!.event.pointer &&
+          (tapDurationLessThan == null ||
+              DateTime.now().difference(_down!.start) < tapDurationLessThan!) &&
+          (tapDurationGreaterThan == null ||
+              DateTime.now().difference(_down!.start) >
+                  tapDurationGreaterThan!)) {
         _down = null;
         return true;
       }
-    } else if (event is PointerExitEvent) {
       _down = null;
-    } else if (event is PointerMoveEvent) {
-      if (!component.hitTest(point)) {
-        _down = null;
-      }
+    } else if (event is PointerPanZoomStartEvent ||
+        event is PointerPanZoomUpdateEvent ||
+        event is PointerPanZoomEndEvent ||
+        event is PointerCancelEvent ||
+        event is PointerExitEvent) {
+      _down = null;
     }
     return false;
   }
+
+  static const longPressDuration = Duration(seconds: 3);
+  static const shortPressDuration = Duration(seconds: 2);
 }
 
 abstract class CanHitTest implements Component {

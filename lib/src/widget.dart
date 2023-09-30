@@ -83,7 +83,7 @@ class GameWidgetRenderObject extends RenderBox {
   void handleEvent(PointerEvent event, covariant HitTestEntry entry) {
     for (final layer in _components) {
       for (final component in layer) {
-        component.handleEvent(event);
+        component.handlePointerEvent(event);
       }
     }
   }
@@ -93,16 +93,24 @@ class GameWidgetRenderObject extends RenderBox {
 
   late final _ticker = Ticker(_tick);
 
+  Duration? _previousTick;
+
   void _tick(Duration elapsed) {
-    bool needsUpdate = false;
+    var delta = const Duration();
+    if(_previousTick != null) {
+      delta = elapsed - _previousTick!;
+    }
+    _previousTick = elapsed;
+
+    bool needsPaint = false;
     for (final layer in _components) {
       for (final component in layer) {
-        if (component.tick(elapsed)) {
-          needsUpdate = true;
+        if (component.tick(elapsed, delta)) {
+          needsPaint = true;
         }
       }
     }
-    if (needsUpdate) {
+    if (needsPaint) {
       markNeedsPaint();
     }
   }
