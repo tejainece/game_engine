@@ -76,7 +76,7 @@ class BlockPointerEvents implements Component {
   void handlePointerEvent(PointerEvent event) {}
 }
 
-mixin BlockPointerMixin on Component {
+mixin BlockPointerMixin on Object implements Component {
   @override
   void handlePointerEvent(PointerEvent event) {}
 }
