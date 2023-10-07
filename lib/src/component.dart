@@ -1,12 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
+class TickCtx {
+  Duration _timestamp;
+  Duration _dt;
+
+  TickCtx({required Duration timestamp, required Duration dt})
+      : _timestamp = timestamp,
+        _dt = dt;
+  
+  void nextTick(Duration timestamp) {
+    _dt = timestamp - _timestamp;
+    _timestamp = timestamp;
+    
+    _needsRender = false;
+    _needsDetachOld = _needsDetach;
+    _needsDetach = {};
+  }
+  
+  Duration get timestamp => _timestamp;
+  Duration get dt => _dt;
+
+  bool _needsRender = false;
+
+  var _needsDetachOld = <NeedsDetach>{};
+
+  var _needsDetach = <NeedsDetach>{};
+
+  bool get needsRender => _needsRender;
+
+  Iterable<NeedsDetach> get detached => _needsDetachOld;
+
+  void shouldRender() {
+    _needsRender = true;
+  }
+
+  void registerDetach(NeedsDetach component) {
+    if(!_needsDetachOld.remove(component)) {
+      component.attach();
+    }
+    _needsDetach.add(component);
+  }
+}
+
+abstract class NeedsDetach {
+  void attach();
+
+  void detach();
+}
+
 abstract class Component {
-  void paint(Canvas canvas);
+  void render(Canvas canvas);
 
-  void dispose();
-
-  bool tick(Duration timestamp, Duration diff);
+  void tick(TickCtx ctx);
 
   void handlePointerEvent(PointerEvent event);
 }
@@ -17,26 +63,24 @@ class BlockTicks implements Component {
   BlockTicks(this.child);
 
   @override
-  void paint(Canvas canvas) {
-    child.paint(canvas);
+  void render(Canvas canvas) {
+    child.render(canvas);
   }
 
   @override
-  void dispose() {}
+  void tick(TickCtx ctx) {}
 
   @override
-  bool tick(Duration timestamp, Duration delta) => false;
-
-  @override
-  void handlePointerEvent(PointerEvent event) => child.handlePointerEvent(event);
+  void handlePointerEvent(PointerEvent event) =>
+      child.handlePointerEvent(event);
 }
 
-mixin BlockTicksMixin on Component {
+mixin BlockTicksMixin on Object implements Component {
   @override
-  bool tick(Duration timestamp, Duration delta) => false;
+  void tick(TickCtx ctx) {}
 }
 
-class HexComponent implements Component, CanHitTest {
+class HexComponent with BlockTicksMixin implements Component, CanHitTest {
   late Offset _position;
   late Size _size;
   final BorderPainter? border;
@@ -77,7 +121,7 @@ class HexComponent implements Component, CanHitTest {
   bool hitTest(Offset point) => _path.contains(point);
 
   @override
-  void paint(Canvas canvas) {
+  void render(Canvas canvas) {
     canvas.drawPath(_path, _paint);
 
     if (border != null) {
@@ -101,12 +145,6 @@ class HexComponent implements Component, CanHitTest {
   }
 
   @override
-  void dispose() {}
-
-  @override
-  bool tick(Duration timestamp, Duration delta) => false;
-
-  @override
   void handlePointerEvent(PointerEvent event) {}
 }
 
@@ -127,4 +165,4 @@ class BorderPainter {
   set strokeWidth(double value) => paint.strokeWidth = value;
 }
 
-enum BorderAlign {inside, center, outside}
+enum BorderAlign { inside, center, outside }

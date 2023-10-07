@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:game_engine/game_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -8,9 +7,14 @@ class GameWidget extends LeafRenderObjectWidget {
   final ValueChanged<Size>? onResize;
   final ValueChanged<PointerEvent>? onPanZoom;
   final List<List<Component>> components;
+  final ValueChanged<Offset>? onMoveOffset;
 
   const GameWidget(
-      {Key? key, this.onResize, this.onPanZoom, required this.components})
+      {Key? key,
+      this.onResize,
+      this.onPanZoom,
+      this.onMoveOffset,
+      required this.components})
       : super(key: key);
 
   @override
@@ -22,7 +26,10 @@ class GameWidget extends LeafRenderObjectWidget {
   void updateRenderObject(
       BuildContext context, GameWidgetRenderObject renderObject) {
     renderObject._update(
-        onResize: onResize, onPanZoom: onPanZoom, components: components);
+        onResize: onResize,
+        onPanZoom: onPanZoom,
+        components: components,
+        onMoveOffset: onMoveOffset);
   }
 }
 
@@ -30,11 +37,13 @@ class GameWidgetRenderObject extends RenderBox {
   Size? _oldSize;
   ValueChanged<Size>? _onResize;
   ValueChanged<PointerEvent>? onPanZoom;
+  ValueChanged<Offset>? onMoveOffset;
   List<List<Component>> _components;
 
   GameWidgetRenderObject(
       {ValueChanged<Size>? onResize,
       this.onPanZoom,
+      this.onMoveOffset,
       required List<List<Component>> components})
       : _components = components {
     this.onResize = onResize;
@@ -50,9 +59,11 @@ class GameWidgetRenderObject extends RenderBox {
   void _update(
       {required ValueChanged<Size>? onResize,
       required ValueChanged<PointerEvent>? onPanZoom,
+      required ValueChanged<Offset>? onMoveOffset,
       required List<List<Component>> components}) {
     _onResize = onResize;
     this.onPanZoom = onPanZoom;
+    this.onMoveOffset = onMoveOffset;
     _components = components;
     markNeedsPaint();
   }
@@ -78,26 +89,21 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    final start = Stopwatch();
     context.canvas.drawColor(Colors.black, BlendMode.src);
 
     context.canvas.save();
     for (final layer in _components) {
       for (final component in layer) {
-        component.paint(context.canvas);
+        component.render(context.canvas);
       }
     }
     context.canvas.restore();
+    // print('${DateTime.now()} => painting took ${start.elapsed}');
   }
 
   @override
   void handleEvent(PointerEvent event, covariant HitTestEntry entry) {
-    if (event is PointerPanZoomStartEvent ||
-        event is PointerPanZoomUpdateEvent ||
-        event is PointerPanZoomEndEvent) {
-      // TODO way to block propagation?
-      onPanZoom?.call(event);
-    }
-
     for (final layer in _components) {
       for (final component in layer) {
         component.handlePointerEvent(event);
@@ -110,25 +116,22 @@ class GameWidgetRenderObject extends RenderBox {
 
   late final _ticker = Ticker(_tick);
 
-  Duration? _previousTick;
+  TickCtx? _ctx;
 
   void _tick(Duration elapsed) {
-    var delta = const Duration();
-    if (_previousTick != null) {
-      delta = elapsed - _previousTick!;
-    }
-    _previousTick = elapsed;
+    _ctx ??= TickCtx(timestamp: elapsed, dt: const Duration());
+    _ctx!.nextTick(elapsed);
 
-    bool needsPaint = false;
     for (final layer in _components) {
       for (final component in layer) {
-        if (component.tick(elapsed, delta)) {
-          needsPaint = true;
-        }
+        component.tick(_ctx!);
       }
     }
-    if (needsPaint) {
+    if (_ctx!.needsRender) {
       markNeedsPaint();
+    }
+    for(final object in _ctx!.detached) {
+      object.detach();
     }
   }
 

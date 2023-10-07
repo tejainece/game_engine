@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_sprite/flutter_sprite.dart';
@@ -19,8 +18,7 @@ class _Render {
     required Offset offset,
     required Offset anchor,
   }) {
-    src = frame.portion.offset.toOffset & frame.portion.size.toSize;
-
+    src = frame.rectangle.rect;
     update(offset, anchor, scale);
   }
 
@@ -37,7 +35,7 @@ class _Render {
 }
 
 class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
-  final Sprite sprite;
+  Sprite? _sprite;
 
   Offset _offset = const Offset(0, 0);
 
@@ -45,13 +43,13 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
 
   double _scale = 1;
 
-  SpriteComponent(this.sprite,
+  SpriteComponent(Sprite sprite,
       {required Offset offset,
       required Offset anchor,
       double scale = 1,
       double opacity = 1}) {
+    set(sprite: sprite, anchor: anchor, offset: offset, scale: scale);
     this.opacity = opacity;
-    this.scale = scale;
   }
 
   bool _dirty = true;
@@ -59,6 +57,25 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   _Render? _info;
 
   final _paint = Paint()..color = const Color.fromRGBO(255, 255, 255, 1);
+
+  Sprite get sprite => _sprite!;
+  set sprite(Sprite value) {
+    if (value == _sprite) return;
+    _sprite = value;
+    if (_sprite!.frames.isNotEmpty) {
+      _info = _Render.make(
+        index: 0,
+        frame: _sprite!.frames[0],
+        scale: _scale,
+        offset: _offset,
+        anchor: _anchor,
+        sprite: _sprite!,
+      );
+    } else {
+      _info = null;
+    }
+    _dirty = true;
+  }
 
   double get opacity => _paint.color.opacity;
   set opacity(double value) {
@@ -85,69 +102,60 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(anchor: value);
   }
 
-  void set({double? scale, Offset? offset, Offset? anchor}) {
+  void set({Sprite? sprite, double? scale, Offset? offset, Offset? anchor}) {
     if (offset == _offset) {
       offset = null;
-    } else {
-      _offset = offset!;
+    } else if (offset != null) {
+      _offset = offset;
     }
     if (anchor == _anchor) {
       anchor = null;
-    } else {
-      _anchor = anchor!;
+    } else if (anchor != null) {
+      _anchor = anchor;
     }
     if (scale == _scale) {
       scale = null;
-    } else {
-      _scale = scale!;
+    } else if (scale != null) {
+      _scale = scale;
     }
-    if (offset != null || anchor != null || scale != null) {
+    if (sprite != null && sprite != _sprite) {
+      this.sprite = sprite;
+    } else if (offset != null || anchor != null || scale != null) {
       _info?.update(_offset, _anchor, _scale);
       _dirty = true;
     }
   }
 
   @override
-  void paint(Canvas canvas) {
+  void render(Canvas canvas) {
     if (_info == null) return;
     canvas.drawImageRect(_info!.image, _info!.src, _info!.dest, _paint);
   }
 
   @override
-  bool tick(Duration timestamp, Duration delta) {
-    bool oldDirty = _dirty;
-    _dirty = true;
+  void tick(TickCtx ctx) {
+    bool needsRender = _dirty;
+    _dirty = false;
 
-    if (sprite.frames.isEmpty) return oldDirty;
-    if (_info == null) {
-      _info = _Render.make(
-        index: 0,
-        frame: sprite.frames[0],
-        scale: scale,
-        offset: offset,
-        anchor: anchor,
-        sprite: sprite,
-      );
-      return true;
+    if (!_paused) {
+      _elapsed += ctx.dt;
+      final frameInterval = _info!.frame.interval ?? sprite.interval;
+      if (_elapsed >= frameInterval) {
+        int index = (_info!.index + 1) % sprite.frames.length;
+        _info = _Render.make(
+          index: index,
+          frame: _sprite!.frames[index],
+          scale: _scale,
+          offset: _offset,
+          anchor: _anchor,
+          sprite: _sprite!,
+        );
+        needsRender = true;
+      }
     }
-    if (_paused) return oldDirty;
-    _elapsed += delta;
-    final frameInterval = _info!.frame.interval ?? sprite.interval;
-    if (_elapsed < frameInterval) return true;
-    int index = (_info!.index + 1) % sprite.frames.length;
-    _info = _Render.make(
-      index: index,
-      frame: sprite.frames[index],
-      scale: scale,
-      offset: offset,
-      anchor: anchor,
-      sprite: sprite,
-    );
-    return true;
-  }
 
-  @override
-  void dispose() {}
+    if(needsRender) ctx.shouldRender();
+  }
 
   Duration _elapsed = const Duration();
 
@@ -173,11 +181,4 @@ abstract class CanAnimate {
   void pause();
 
   bool get isPaused;
-}
-
-extension PointExt on Point<num> {
-  Point<int> get toInt => Point(x.toInt(), y.toInt());
-  Point<double> get toDouble => Point(x.toDouble(), y.toDouble());
-  Size get toSize => Size(x.toDouble(), y.toDouble());
-  Offset get toOffset => Offset(x.toDouble(), y.toDouble());
 }

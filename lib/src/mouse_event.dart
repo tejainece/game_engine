@@ -14,20 +14,15 @@ class MouseInteraction implements Component, CanHitTest {
   MouseInteraction({required this.child, this.onTap});
 
   @override
-  void paint(Canvas canvas) {
-    child.paint(canvas);
+  void render(Canvas canvas) {
+    child.render(canvas);
   }
 
   @override
   bool hitTest(Offset point) => child.hitTest(point);
 
   @override
-  void dispose() {
-    child.dispose();
-  }
-
-  @override
-  bool tick(Duration timestamp, Duration delta) => child.tick(timestamp, delta);
+  void tick(TickCtx ctx) => child.tick(ctx);
 
   late final _tapDetector = TapDetector(this);
 
@@ -62,15 +57,10 @@ class BlockPointerEvents implements Component {
   BlockPointerEvents(this.child);
   
   @override
-  void paint(Canvas canvas) => child.paint(canvas);
+  void render(Canvas canvas) => child.render(canvas);
 
   @override
-  void dispose() {
-    child.dispose();
-  }
-
-  @override
-  bool tick(Duration timestamp, Duration delta) => child.tick(timestamp, delta);
+  void tick(TickCtx ctx) => child.tick(ctx);
 
   @override
   void handlePointerEvent(PointerEvent event) {}
