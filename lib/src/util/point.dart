@@ -25,6 +25,8 @@ extension PointExt on Point<num> {
 
 extension SizeExt on Size {
   Point<double> get toPoint => Point<double>(width, height);
+
+  Offset get toOffset => Offset(width, height);
 }
 
 extension OffsetExt on Offset {
