@@ -23,8 +23,9 @@ class _Render {
   }
 
   void update(Offset offset, Offset anchor, double scale) {
+    print('${anchor} ${frame.translate}');
     _dest = offset +
-            ((anchor - sprite.anchor.toOffset + frame.translate.toOffset) *
+            ((anchor - frame.translate.toOffset) *
                 scale) &
         (sprite.size.toSize * scale);
   }
@@ -47,8 +48,14 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       {required Offset offset,
       required Offset anchor,
       double scale = 1,
+      num? scaleWidth,
       double opacity = 1}) {
-    set(sprite: sprite, anchor: anchor, offset: offset, scale: scale);
+    set(
+        sprite: sprite,
+        anchor: anchor,
+        offset: offset,
+        scale: scale,
+        scaleWidth: scaleWidth);
     this.opacity = opacity;
   }
 
@@ -102,25 +109,39 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(anchor: value);
   }
 
-  void set({Sprite? sprite, double? scale, Offset? offset, Offset? anchor}) {
-    if (offset == _offset) {
-      offset = null;
-    } else if (offset != null) {
+  void set(
+      {Sprite? sprite,
+      double? scale,
+      num? scaleWidth,
+      Offset? offset,
+      Offset? anchor}) {
+    bool needsUpdate = false;
+    if (offset != null && offset != _offset) {
       _offset = offset;
+      needsUpdate = true;
     }
-    if (anchor == _anchor) {
-      anchor = null;
-    } else if (anchor != null) {
+    if (anchor != null && anchor != _anchor) {
       _anchor = anchor;
+      needsUpdate = true;
     }
-    if (scale == _scale) {
-      scale = null;
-    } else if (scale != null) {
+    if (scale != null && scale != _scale) {
       _scale = scale;
+      needsUpdate = true;
     }
     if (sprite != null && sprite != _sprite) {
       this.sprite = sprite;
-    } else if (offset != null || anchor != null || scale != null) {
+    }
+    if (scaleWidth != null) {
+      if (_sprite!.refScale == null) {
+        throw Exception('cannot use scaleWidth when refScale is null');
+      }
+      scale = scaleWidth / _sprite!.refScale!;
+      if (scale != _scale) {
+        _scale = scale;
+        needsUpdate = true;
+      }
+    }
+    if (needsUpdate) {
       _info?.update(_offset, _anchor, _scale);
       _dirty = true;
     }
@@ -137,7 +158,9 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     bool needsRender = _dirty;
     _dirty = false;
 
-    if (!_paused) {
+    if (_sprite!.frames.length <= 1) {
+      // Do nothing
+    } else if (!_paused) {
       _elapsed += ctx.dt;
       final frameInterval = _info!.frame.interval ?? sprite.interval;
       if (_elapsed >= frameInterval) {
@@ -150,11 +173,12 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
           anchor: _anchor,
           sprite: _sprite!,
         );
+        _elapsed = const Duration();
         needsRender = true;
       }
     }
 
-    if(needsRender) ctx.shouldRender();
+    if (needsRender) ctx.shouldRender();
   }
 
   Duration _elapsed = const Duration();
