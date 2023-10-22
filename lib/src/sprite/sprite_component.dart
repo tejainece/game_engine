@@ -23,9 +23,7 @@ class _Render {
   }
 
   void update(Offset offset, Offset anchor, double scale) {
-    _dest = offset +
-            ((anchor - frame.anchor.toOffset) *
-                scale) &
+    _dest = offset + (anchor - frame.anchor.toOffset * scale) &
         (sprite.size.toSize * scale);
   }
 
