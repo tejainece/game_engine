@@ -24,13 +24,15 @@ extension PointExt on Point<num> {
 }
 
 extension SizeExt on Size {
-  Point<double> get toPoint => Point<double>(width, height);
+  Size operator /(num other) => Size(width / 2, height / 2);
 
-  Offset get toOffset => Offset(width, height);
+  Point<double> get p => Point<double>(width, height);
+
+  Offset get o => Offset(width, height);
 }
 
 extension OffsetExt on Offset {
-  Point<double> get toPoint => Point<double>(dx, dy);
+  Point<double> get p => Point<double>(dx, dy);
 }
 
 extension RectangleExt on Rectangle<num> {
