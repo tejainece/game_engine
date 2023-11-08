@@ -49,25 +49,26 @@ class HexComponent implements Component, CanHitTest {
     _update();
   }
 
-  void set({Offset? position, Size? size, BorderPainter? border, Color? color}) {
+  void set(
+      {Offset? position, Size? size, BorderPainter? border, Color? color}) {
     bool needsUpdate = false;
-    if(position != null && position != _position) {
+    if (position != null && position != _position) {
       _position = position;
       needsUpdate = true;
     }
-    if(size != null && size != _size) {
+    if (size != null && size != _size) {
       _size = size;
       needsUpdate = true;
     }
-    if(border != null && border != _border) {
+    if (border != null && border != _border) {
       _border = border;
       needsUpdate = true;
     }
-    if(color != null && color != _color) {
+    if (color != null && color != _color) {
       _color = color;
       needsUpdate = true;
     }
-    if(needsUpdate) _update();
+    if (needsUpdate) _update();
   }
 
   Paint? _paint;
@@ -117,18 +118,18 @@ class HexComponent implements Component, CanHitTest {
     }
 
     if (_border != null) {
-      final borderPos = position +
-          Offset(_border!.strokeWidth, _border!.strokeWidth);
-      final w2 = (size.width - (_border!.strokeWidth * 2)) / 2;
-      final h4 = (size.height - (_border!.strokeWidth * 2)) / 4;
+      final borderPos =
+          position + Offset(_border!.strokeWidth / 2, _border!.strokeWidth / 2);
+      final w2 = (size.width - _border!.strokeWidth) / 2;
+      final h4 = (size.height - _border!.strokeWidth) / 4;
       _borderPath = Path()
-        ..moveTo(borderPos.dx + w2, borderPos.dy + 0) // top mid
-        ..lineTo(borderPos.dx + 0, borderPos.dy + h4) // left top
-        ..lineTo(borderPos.dx + 0, borderPos.dy + h4 * 3) // left bot
-        ..lineTo(borderPos.dx + w2, borderPos.dy + size.height) // bot mid
-        ..lineTo(borderPos.dx + size.width, borderPos.dy + h4 * 3) // right bot
-        ..lineTo(borderPos.dx + size.width, borderPos.dy + h4) // right top
-        ..lineTo(borderPos.dx + w2, borderPos.dy + 0) // top mid
+        ..moveTo(borderPos.dx + w2, borderPos.dy + 0) // n
+        ..lineTo(borderPos.dx + 0, borderPos.dy + h4) // nw
+        ..lineTo(borderPos.dx + 0, borderPos.dy + h4 * 3) // sw
+        ..lineTo(borderPos.dx + w2, borderPos.dy + h4 * 4) // s
+        ..lineTo(borderPos.dx + w2 * 2, borderPos.dy + h4 * 3) // se
+        ..lineTo(borderPos.dx + w2 * 2, borderPos.dy + h4) // ne
+        ..lineTo(borderPos.dx + w2, borderPos.dy + 0) // n
         ..close();
     } else {
       _borderPath = null;
