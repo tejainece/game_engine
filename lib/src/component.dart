@@ -8,16 +8,16 @@ class TickCtx {
   TickCtx({required Duration timestamp, required Duration dt})
       : _timestamp = timestamp,
         _dt = dt;
-  
+
   void nextTick(Duration timestamp) {
     _dt = timestamp - _timestamp;
     _timestamp = timestamp;
-    
+
     _needsRender = false;
     _needsDetachOld = _needsDetach;
     _needsDetach = {};
   }
-  
+
   Duration get timestamp => _timestamp;
   Duration get dt => _dt;
 
@@ -36,7 +36,7 @@ class TickCtx {
   }
 
   void registerDetach(NeedsDetach component) {
-    if(!_needsDetachOld.remove(component)) {
+    if (!_needsDetachOld.remove(component)) {
       component.attach();
     }
     _needsDetach.add(component);
@@ -80,21 +80,23 @@ mixin BlockTicksMixin on Object implements Component {
   void tick(TickCtx ctx) {}
 }
 
-class HexComponent with BlockTicksMixin implements Component, CanHitTest {
+class HexComponent implements Component, CanHitTest {
   late Offset _position;
   late Size _size;
-  final BorderPainter? border;
+  BorderPainter? _borderPainter;
 
   late Path _path;
+  Path? _borderPath;
 
   HexComponent(
       {required Offset position,
       required Size size,
       required Color color,
-      this.border}) {
+      BorderPainter? border}) {
     this.color = color;
     _position = position;
     _size = size;
+    _borderPainter = border;
     _update();
   }
 
@@ -112,6 +114,12 @@ class HexComponent with BlockTicksMixin implements Component, CanHitTest {
     _update();
   }
 
+  set border(BorderPainter? border) {
+    if (border == _borderPainter) return;
+    _borderPainter = border;
+    _update();
+  }
+
   Color get color => _paint.color;
   set color(Color value) => _paint.color = value;
 
@@ -121,15 +129,23 @@ class HexComponent with BlockTicksMixin implements Component, CanHitTest {
   bool hitTest(Offset point) => _path.contains(point);
 
   @override
+  void tick(TickCtx ctx) {
+    if (_dirty) ctx.shouldRender();
+  }
+
+  bool _dirty = true;
+
+  @override
   void render(Canvas canvas) {
     canvas.drawPath(_path, _paint);
 
-    if (border != null) {
-      canvas.drawPath(_path, border!.paint);
+    if (_borderPath != null && _borderPainter != null) {
+      canvas.drawPath(_borderPath!, _borderPainter!.paint);
     }
   }
 
   void _update() {
+    _dirty = true;
     final h4 = size.height / 4;
     final w2 = size.width / 2;
 
@@ -142,6 +158,23 @@ class HexComponent with BlockTicksMixin implements Component, CanHitTest {
       ..lineTo(position.dx + size.width, position.dy + h4) // right top
       ..lineTo(position.dx + w2, position.dy + 0) // top mid
       ..close();
+
+    if (_borderPainter != null) {
+      final borderPos = position +
+          Offset(_borderPainter!.strokeWidth, _borderPainter!.strokeWidth);
+      final w2 = (size.width - (_borderPainter!.strokeWidth *)) / 2;
+      _borderPath = Path()
+        ..moveTo(borderPos.dx + w2, borderPos.dy + 0) // top mid
+        ..lineTo(borderPos.dx + 0, borderPos.dy + h4) // left top
+        ..lineTo(borderPos.dx + 0, borderPos.dy + h4 * 3) // left bot
+        ..lineTo(borderPos.dx + w2, borderPos.dy + size.height) // bot mid
+        ..lineTo(borderPos.dx + size.width, borderPos.dy + h4 * 3) // right bot
+        ..lineTo(borderPos.dx + size.width, borderPos.dy + h4) // right top
+        ..lineTo(borderPos.dx + w2, borderPos.dy + 0) // top mid
+        ..close();
+    } else {
+      _borderPath = null;
+    }
   }
 
   @override
