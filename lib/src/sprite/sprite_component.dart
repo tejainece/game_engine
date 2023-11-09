@@ -23,13 +23,15 @@ class _Render {
   }
 
   void update(Offset offset, Offset anchor, double scale) {
-    _dest = offset + (anchor - frame.anchor.toOffset * scale) &
-        (sprite.size.toSize * scale);
+    _dest = offset + (anchor - (sprite.anchor - frame.translate).o * scale) &
+        (sprite.size.s * scale);
   }
 
   ui.Image get image => frame.image;
-  bool get flip => frame.flip;
+
   Rect get dest => _dest;
+
+  bool get flip => sprite.flip;
 }
 
 class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
@@ -63,6 +65,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   final _paint = Paint()..color = const Color.fromRGBO(255, 255, 255, 1);
 
   Sprite get sprite => _sprite!;
+
   set sprite(Sprite value) {
     if (value == _sprite) return;
     _sprite = value;
@@ -82,6 +85,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   }
 
   double get opacity => _paint.color.opacity;
+
   set opacity(double value) {
     if (opacity == value) return;
     _paint.color = _paint.color.withOpacity(value);
@@ -89,18 +93,21 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   }
 
   double get scale => _scale;
+
   set scale(double value) {
     if (scale == value) return;
     set(scale: value);
   }
 
   Offset get offset => _offset;
+
   set offset(Offset value) {
     if (_offset == value) return;
     set(offset: value);
   }
 
   Offset get anchor => _anchor;
+
   set anchor(Offset value) {
     if (_anchor == value) return;
     set(anchor: value);
@@ -147,7 +154,21 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   @override
   void render(Canvas canvas) {
     if (_info == null) return;
+
+    // print('rendering ${_info!.flip}');
+    if (_info!.flip) {
+      canvas.save();
+      double dx = -(_info!._dest.left + _info!._dest.width/2);
+      canvas.translate(-dx, 0.0);
+      canvas.scale(-1.0, 1.0);
+      canvas.translate(dx, 0.0);
+    }
+
     canvas.drawImageRect(_info!.image, _info!.src, _info!.dest, _paint);
+
+    if (_info!.flip) {
+      canvas.restore();
+    }
   }
 
   @override

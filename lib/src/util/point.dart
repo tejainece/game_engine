@@ -4,8 +4,8 @@ import 'dart:ui';
 extension PointExt on Point<num> {
   Point<int> get toInt => Point(x.toInt(), y.toInt());
   Point<double> get toDouble => Point(x.toDouble(), y.toDouble());
-  Size get toSize => Size(x.toDouble(), y.toDouble());
-  Offset get toOffset => Offset(x.toDouble(), y.toDouble());
+  Size get s => Size(x.toDouble(), y.toDouble());
+  Offset get o => Offset(x.toDouble(), y.toDouble());
 
   Point<double> operator /(other) {
     if (other == null) {

@@ -5,11 +5,11 @@ import 'package:game_engine/game_engine.dart';
 class MouseInteraction implements Component, CanHitTest {
   late CanHitTest child;
 
-  VoidCallback? onTap;
+  ValueChanged<ClickEvent>? onTap;
 
-  VoidCallback? onLongPress;
+  ValueChanged<ClickEvent>? onLongPress;
 
-  VoidCallback? onShortPress;
+  ValueChanged<ClickEvent>? onShortPress;
 
   MouseInteraction({required this.child, this.onTap});
 
@@ -33,18 +33,21 @@ class MouseInteraction implements Component, CanHitTest {
   @override
   void handlePointerEvent(PointerEvent event) {
     if (onTap != null) {
-      if (_tapDetector.handlePointerEvent(event)) {
-        onTap!.call();
+      final click = _tapDetector.handlePointerEvent(event);
+      if (click != null) {
+        onTap!.call(click);
       }
     }
     if (onLongPress != null) {
-      if (_longPressDetector.handlePointerEvent(event)) {
-        onLongPress!.call();
+      final click = _longPressDetector.handlePointerEvent(event);
+      if (click != null) {
+        onLongPress!.call(click);
       }
     }
-    if(onShortPress != null) {
-      if(_shortPressDetector.handlePointerEvent(event)) {
-        onShortPress!.call();
+    if (onShortPress != null) {
+      final click = _shortPressDetector.handlePointerEvent(event);
+      if (click != null) {
+        onShortPress!.call(click);
       }
     }
     child.handlePointerEvent(event);
@@ -55,7 +58,7 @@ class BlockPointerEvents implements Component {
   final Component child;
 
   BlockPointerEvents(this.child);
-  
+
   @override
   void render(Canvas canvas) => child.render(canvas);
 
@@ -71,53 +74,86 @@ mixin BlockPointerMixin on Object implements Component {
   void handlePointerEvent(PointerEvent event) {}
 }
 
+class ClickEvent {
+  final PointerDownEvent down;
+  final DateTime downTime;
+  final PointerUpEvent up;
+  final DateTime upTime;
+
+  ClickEvent(
+      {required this.down,
+      required this.downTime,
+      required this.up,
+      required this.upTime});
+
+  int get buttons => down.buttons;
+
+  PointerDeviceKind get kind => down.kind;
+}
+
+class TapTracker {
+  final PointerDownEvent down;
+  final DateTime downTime;
+
+  TapTracker({required this.down, required this.downTime});
+
+  int get pointer => down.pointer;
+}
+
 class TapDetector {
-  ({PointerEvent event, DateTime start})? _down;
+  TapTracker? _tracker;
 
   final CanHitTest component;
 
-  Duration? tapDurationLessThan;
-  Duration? tapDurationGreaterThan;
+  Duration? lessThan;
+  Duration? greaterThan;
 
-  TapDetector(this.component,
-      {this.tapDurationLessThan, this.tapDurationGreaterThan});
+  TapDetector(this.component, {this.lessThan, this.greaterThan});
 
-  TapDetector.longPress(this.component,
-      {this.tapDurationGreaterThan = longPressDuration});
+  TapDetector.longPress(this.component, {this.greaterThan = longPressDuration});
 
-  TapDetector.shortPress(this.component,
-      {this.tapDurationLessThan = shortPressDuration});
+  TapDetector.shortPress(this.component, {this.lessThan = shortPressDuration});
 
-  bool handlePointerEvent(PointerEvent event) {
+  ClickEvent? handlePointerEvent(PointerEvent event) {
     final point = event.localPosition;
 
+    if (!component.hitTest(point)) {
+      return null;
+    }
+
     if (event is PointerDownEvent) {
-      if (component.hitTest(point)) {
-        _down = (event: event, start: DateTime.now());
-      } else {
-        _down = null;
-      }
-    } else if (event is PointerUpEvent) {
-      if (component.hitTest(point) &&
-          _down != null &&
-          event.pointer == _down!.event.pointer &&
-          (tapDurationLessThan == null ||
-              DateTime.now().difference(_down!.start) < tapDurationLessThan!) &&
-          (tapDurationGreaterThan == null ||
-              DateTime.now().difference(_down!.start) >
-                  tapDurationGreaterThan!)) {
-        _down = null;
-        return true;
-      }
-      _down = null;
+      _tracker = TapTracker(down: event, downTime: DateTime.now());
+      return null;
     } else if (event is PointerPanZoomStartEvent ||
         event is PointerPanZoomUpdateEvent ||
         event is PointerPanZoomEndEvent ||
         event is PointerCancelEvent ||
         event is PointerExitEvent) {
-      _down = null;
+      _tracker = null;
+      return null;
+    } else if (event is! PointerUpEvent) {
+      return null;
     }
-    return false;
+
+    if (_tracker == null || event.pointer != _tracker!.pointer) {
+      _tracker = null;
+      return null;
+    }
+
+    final upTime = DateTime.now();
+    final dur = upTime.difference(_tracker!.downTime);
+    if ((lessThan == null || dur < lessThan!) &&
+        (greaterThan == null || dur > greaterThan!)) {
+      final tracker = _tracker!;
+      _tracker = null;
+      return ClickEvent(
+          down: tracker.down,
+          downTime: tracker.downTime,
+          up: event,
+          upTime: upTime);
+    }
+    _tracker = null;
+    return null;
   }
 
   static const longPressDuration = Duration(seconds: 3);

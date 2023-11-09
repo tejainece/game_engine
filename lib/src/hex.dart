@@ -50,7 +50,7 @@ class HexComponent implements Component, CanHitTest {
   }
 
   void set(
-      {Offset? position, Size? size, BorderPainter? border, Color? color}) {
+      {Offset? position, Size? size, Color? color}) {
     bool needsUpdate = false;
     if (position != null && position != _position) {
       _position = position;
@@ -58,10 +58,6 @@ class HexComponent implements Component, CanHitTest {
     }
     if (size != null && size != _size) {
       _size = size;
-      needsUpdate = true;
-    }
-    if (border != null && border != _border) {
-      _border = border;
       needsUpdate = true;
     }
     if (color != null && color != _color) {
@@ -78,7 +74,10 @@ class HexComponent implements Component, CanHitTest {
 
   @override
   void tick(TickCtx ctx) {
-    if (_dirty) ctx.shouldRender();
+    if (_dirty) {
+      _dirty = false;
+      ctx.shouldRender();
+    }
   }
 
   bool _dirty = true;
