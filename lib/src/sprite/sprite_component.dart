@@ -35,18 +35,18 @@ class _Render {
 class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   Sprite? _sprite;
 
-  Offset _offset = const Offset(0, 0);
-
-  Offset _anchor = const Offset(0, 0);
-
+  var _offset = const Offset(0, 0);
+  var _anchor = const Offset(0, 0);
   double _scale = 1;
+  VoidCallback? onFinish;
 
   SpriteComponent(Sprite sprite,
       {required Offset offset,
       required Offset anchor,
       double scale = 1,
       num? scaleWidth,
-      double opacity = 1}) {
+      double opacity = 1,
+      this.onFinish}) {
     set(
         sprite: sprite,
         anchor: anchor,
@@ -161,6 +161,11 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       _elapsed += ctx.dt;
       final frameInterval = _info!.frame.interval ?? sprite.interval;
       if (_elapsed >= frameInterval) {
+        if (onFinish != null) {
+          if (_info!.index == sprite.frames.length - 1) {
+            onFinish!();
+          }
+        }
         int index = (_info!.index + 1) % sprite.frames.length;
         _info = _Render.make(
           index: index,

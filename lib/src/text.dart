@@ -4,18 +4,22 @@ import 'package:game_engine/game_engine.dart';
 class TextComponent implements Component {
   late InlineSpan _text;
   late TextAlign _textAlign;
+  late TextDirection _textDirection;
   late Offset _offset;
   late Size _size;
 
-  TextComponent(
-      {required InlineSpan text,
-      Offset offset = const Offset(0, 0),
-      Size size = const Size(0, 0),
-      TextAlign textAlign = TextAlign.start}) {
+  TextComponent({
+    required InlineSpan text,
+    Offset offset = const Offset(0, 0),
+    Size size = const Size(0, 0),
+    TextAlign textAlign = TextAlign.start,
+    TextDirection textDirection = TextDirection.ltr,
+  }) {
     _offset = offset;
     _size = size;
     _text = text;
     _textAlign = textAlign;
+    _textDirection = textDirection;
     _update();
   }
 
@@ -66,7 +70,11 @@ class TextComponent implements Component {
   }
 
   void set(
-      {Offset? offset, Size? size, TextAlign? textAlign, InlineSpan? text}) {
+      {Offset? offset,
+      Size? size,
+      TextAlign? textAlign,
+      InlineSpan? text,
+      TextDirection? textDirection}) {
     if (offset != null && offset != _offset) {
       _offset = offset;
       _dirty = true;
@@ -85,6 +93,10 @@ class TextComponent implements Component {
       _text = text;
       needsUpdate = true;
     }
+    if (textDirection != null && textDirection != _textDirection) {
+      _textDirection = textDirection;
+      needsUpdate = true;
+    }
     if (needsUpdate) {
       _update();
     }
@@ -93,7 +105,8 @@ class TextComponent implements Component {
   void _update() {
     _dirty = true;
 
-    _painter = TextPainter(text: _text, textAlign: _textAlign);
+    _painter = TextPainter(
+        text: _text, textAlign: _textAlign, textDirection: _textDirection);
     _painter.layout(maxWidth: _size.width);
   }
 
