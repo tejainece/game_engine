@@ -36,16 +36,16 @@ class TickCtx {
 
   void registerDetach(NeedsDetach component) {
     if (!_needsDetachOld.remove(component)) {
-      component.attach();
+      component.onAttach();
     }
     _needsDetach.add(component);
   }
 }
 
 abstract class NeedsDetach {
-  void attach();
+  void onAttach();
 
-  void detach();
+  void onDetach();
 }
 
 abstract class Component {

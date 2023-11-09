@@ -131,7 +131,7 @@ class GameWidgetRenderObject extends RenderBox {
       markNeedsPaint();
     }
     for(final object in _ctx!.detached) {
-      object.detach();
+      object.onDetach();
     }
   }
 

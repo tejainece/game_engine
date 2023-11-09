@@ -33,17 +33,17 @@ class MouseInteraction implements Component, CanHitTest {
   @override
   void handlePointerEvent(PointerEvent event) {
     if (onTap != null) {
-      if (_tapDetector.handleEvent(event)) {
+      if (_tapDetector.handlePointerEvent(event)) {
         onTap!.call();
       }
     }
     if (onLongPress != null) {
-      if (_longPressDetector.handleEvent(event)) {
+      if (_longPressDetector.handlePointerEvent(event)) {
         onLongPress!.call();
       }
     }
     if(onShortPress != null) {
-      if(_shortPressDetector.handleEvent(event)) {
+      if(_shortPressDetector.handlePointerEvent(event)) {
         onShortPress!.call();
       }
     }
@@ -88,7 +88,7 @@ class TapDetector {
   TapDetector.shortPress(this.component,
       {this.tapDurationLessThan = shortPressDuration});
 
-  bool handleEvent(PointerEvent event) {
+  bool handlePointerEvent(PointerEvent event) {
     final point = event.localPosition;
 
     if (event is PointerDownEvent) {
