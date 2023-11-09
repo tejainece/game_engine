@@ -29,11 +29,6 @@ class TextComponent implements Component {
   }
 
   @override
-  void render(Canvas canvas) {
-    _painter.paint(canvas, _offset);
-  }
-
-  @override
   void tick(TickCtx ctx) {
     if (_dirty) {
       _dirty = false;
@@ -102,15 +97,20 @@ class TextComponent implements Component {
     }
   }
 
+  late TextPainter _painter;
+
+  bool _dirty = true;
+
   void _update() {
     _dirty = true;
 
     _painter = TextPainter(
         text: _text, textAlign: _textAlign, textDirection: _textDirection);
-    _painter.layout(maxWidth: _size.width);
+    _painter.layout(minWidth: _size.width, maxWidth: _size.width);
   }
 
-  late TextPainter _painter;
-
-  bool _dirty = true;
+  @override
+  void render(Canvas canvas) {
+    _painter.paint(canvas, _offset);
+  }
 }
