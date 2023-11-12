@@ -24,7 +24,7 @@ class _Render {
 
   void update(Offset offset, Offset anchor, double scale) {
     _dest = offset + (anchor - (sprite.anchor - frame.translate).o * scale) &
-        (sprite.size.s * scale);
+        (frame.portion.size.s * scale);
   }
 
   ui.Image get image => frame.image;
@@ -40,7 +40,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   var _offset = const Offset(0, 0);
   var _anchor = const Offset(0, 0);
   double _scale = 1;
-  VoidCallback? onFinish;
+  VoidCallback? onLoopOver;
 
   SpriteComponent(Sprite sprite,
       {required Offset offset,
@@ -48,7 +48,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       double scale = 1,
       num? scaleWidth,
       double opacity = 1,
-      this.onFinish}) {
+      this.onLoopOver}) {
     set(
         sprite: sprite,
         anchor: anchor,
@@ -155,10 +155,9 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
   void render(Canvas canvas) {
     if (_info == null) return;
 
-    // print('rendering ${_info!.flip}');
     if (_info!.flip) {
       canvas.save();
-      double dx = -(_info!._dest.left + _info!._dest.width/2);
+      double dx = -(_info!._dest.left + _info!._dest.width / 2);
       canvas.translate(-dx, 0.0);
       canvas.scale(-1.0, 1.0);
       canvas.translate(dx, 0.0);
@@ -182,9 +181,9 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       _elapsed += ctx.dt;
       final frameInterval = _info!.frame.interval ?? sprite.interval;
       if (_elapsed >= frameInterval) {
-        if (onFinish != null) {
+        if (onLoopOver != null) {
           if (_info!.index == sprite.frames.length - 1) {
-            onFinish!();
+            onLoopOver!();
           }
         }
         int index = (_info!.index + 1) % sprite.frames.length;
