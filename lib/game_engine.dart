@@ -5,3 +5,4 @@ export 'src/widget.dart';
 export 'src/text.dart';
 export 'src/sprite/sprite_component.dart';
 export 'src/util/point.dart';
+export 'src/tween.dart';
