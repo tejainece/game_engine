@@ -3,6 +3,8 @@ description: "A super simple game engine on top of Flutter canvas"
 version: 0.0.1
 homepage:
 
+publish_to: none
+
 environment:
   sdk: '>=3.2.0-134.1.beta <4.0.0'
   flutter: ">=1.17.0"

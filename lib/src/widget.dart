@@ -89,7 +89,6 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    final start = Stopwatch();
     context.canvas.drawColor(Colors.black, BlendMode.src);
 
     context.canvas.save();
