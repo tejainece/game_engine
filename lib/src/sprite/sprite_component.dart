@@ -23,16 +23,16 @@ class _Render {
     update(offset, anchor, scale, size);
   }
 
+  double flipAnchor = 0;
+
   void update(Offset offset, Offset anchor, double scale, Size size) {
-    Offset o = offset;
-    if(!flip) {
-      o += anchor - (sprite.anchor - frame.translate).o * scale;
-    } else {
+    if (flip) {
       anchor = Offset(size.width - anchor.dx, anchor.dy);
-      o += anchor - (sprite.anchor - frame.translate).o * scale;
-      // TODO
+      flipAnchor = frame.anchor.x * scale;
     }
 
+    Offset o =
+        offset + anchor - sprite.anchor.o * scale + frame.translate.o * scale;
     _dest = o & frame.portion.size.s * scale;
   }
 
@@ -57,11 +57,13 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       double scale = 1,
       num? scaleWidth,
       double opacity = 1,
+      Size size = const Size(0, 0),
       this.onLoopOver}) {
     set(
         sprite: sprite,
         anchor: anchor,
         offset: offset,
+        size: size,
         scale: scale,
         scaleWidth: scaleWidth);
     this.opacity = opacity;
@@ -86,6 +88,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
         offset: _offset,
         anchor: _anchor,
         sprite: _sprite!,
+        size: _size,
       );
     } else {
       _info = null;
@@ -115,10 +118,10 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(offset: value);
   }
 
-  Size _size = Size(0, 0);
+  Size _size = const Size(0, 0);
 
   set size(Size value) {
-    if(_size == value) return;
+    if (_size == value) return;
     set(size: value);
   }
 
@@ -134,10 +137,15 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       double? scale,
       num? scaleWidth,
       Offset? offset,
-      Offset? anchor, Size? size}) {
+      Offset? anchor,
+      Size? size}) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;
+      needsUpdate = true;
+    }
+    if (size != null && size != _size) {
+      _size = size;
       needsUpdate = true;
     }
     if (anchor != null && anchor != _anchor) {
@@ -162,7 +170,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       }
     }
     if (needsUpdate) {
-      _info?.update(_offset, _anchor, _scale);
+      _info?.update(_offset, _anchor, _scale, _size);
       _dirty = true;
     }
   }
@@ -173,7 +181,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
 
     if (_info!.flip) {
       canvas.save();
-      double dx = -(_info!._dest.left + _info!._dest.width / 2);
+      double dx = -(_info!._dest.left + _info!.flipAnchor);
       canvas.translate(-dx, 0.0);
       canvas.scale(-1.0, 1.0);
       canvas.translate(dx, 0.0);
@@ -208,6 +216,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
           frame: _sprite!.frames[index],
           scale: _scale,
           offset: _offset,
+          size: _size,
           anchor: _anchor,
           sprite: _sprite!,
         );
