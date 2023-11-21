@@ -17,14 +17,23 @@ class _Render {
     double scale = 1,
     required Offset offset,
     required Offset anchor,
+    required Size size,
   }) {
     src = frame.rectangle.rect;
-    update(offset, anchor, scale);
+    update(offset, anchor, scale, size);
   }
 
-  void update(Offset offset, Offset anchor, double scale) {
-    _dest = offset + (anchor - (sprite.anchor - frame.translate).o * scale) &
-        (frame.portion.size.s * scale);
+  void update(Offset offset, Offset anchor, double scale, Size size) {
+    Offset o = offset;
+    if(!flip) {
+      o += anchor - (sprite.anchor - frame.translate).o * scale;
+    } else {
+      anchor = Offset(size.width - anchor.dx, anchor.dy);
+      o += anchor - (sprite.anchor - frame.translate).o * scale;
+      // TODO
+    }
+
+    _dest = o & frame.portion.size.s * scale;
   }
 
   ui.Image get image => frame.image;
@@ -106,6 +115,13 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(offset: value);
   }
 
+  Size _size = Size(0, 0);
+
+  set size(Size value) {
+    if(_size == value) return;
+    set(size: value);
+  }
+
   Offset get anchor => _anchor;
 
   set anchor(Offset value) {
@@ -118,7 +134,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       double? scale,
       num? scaleWidth,
       Offset? offset,
-      Offset? anchor}) {
+      Offset? anchor, Size? size}) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;
