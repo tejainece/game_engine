@@ -4,5 +4,7 @@ export 'src/mouse_event.dart';
 export 'src/widget.dart';
 export 'src/text.dart';
 export 'src/sprite/sprite_component.dart';
+export 'src/sprite/clip.dart';
 export 'src/util/point.dart';
 export 'src/tween.dart';
+export 'src/sprite/aspect_image.dart';
