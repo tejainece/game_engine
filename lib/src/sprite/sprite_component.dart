@@ -205,10 +205,8 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
       _elapsed += ctx.dt;
       final frameInterval = _info!.frame.interval ?? sprite.interval;
       if (_elapsed >= frameInterval) {
-        if (onLoopOver != null) {
-          if (_info!.index == sprite.frames.length - 1) {
-            onLoopOver!();
-          }
+        if (_info!.index == sprite.frames.length - 1) {
+          onLoopOver?.call();
         }
         int index = (_info!.index + 1) % sprite.frames.length;
         _info = _Render.make(

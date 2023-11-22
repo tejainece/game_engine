@@ -29,6 +29,8 @@ extension SizeExt on Size {
   Point<double> get p => Point<double>(width, height);
 
   Offset get o => Offset(width, height);
+
+  Size operator *(num other) => Size(width * other, height * other);
 }
 
 extension OffsetExt on Offset {
