@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:game_engine/game_engine.dart';
 
-class TextComponent implements Component {
+class TextComponent with BlockPointerMixin implements Component {
   late InlineSpan _text;
   late TextAlign _textAlign;
   late TextDirection _textDirection;
@@ -21,11 +21,6 @@ class TextComponent implements Component {
     _textAlign = textAlign;
     _textDirection = textDirection;
     _update();
-  }
-
-  @override
-  void handlePointerEvent(PointerEvent event) {
-    // TODO: implement handlePointerEvent
   }
 
   @override
