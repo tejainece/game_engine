@@ -68,3 +68,45 @@ class RectClip extends Component {
     }
   }
 }
+
+/*
+class Opacity implements Component {
+  final _children = <Component>[];
+
+  @override
+  void handlePointerEvent(PointerEvent event) {
+    for(final comp in _children) {
+      comp.handlePointerEvent(event);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    canvas.save();
+    canvas.
+    for(final comp in _children) {
+      comp.render(canvas);
+    }
+  }
+
+  bool _dirty = true;
+
+  @override
+  void tick(TickCtx ctx) {
+    if(_dirty) {
+      _dirty = false;
+      ctx.shouldRender();
+    }
+
+    for(final comp in _children) {
+      comp.tick(ctx);
+    }
+  }
+
+  final _paint = Paint();
+
+  set opacity(double value) {
+    _paint.color = _paint.color.withOpacity(value);
+  }
+}
+*/
