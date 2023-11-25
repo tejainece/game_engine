@@ -2,12 +2,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class AspectImage with BlockPointerMixin implements Component {
+class ScaledImage with BlockPointerMixin implements Component {
   late ui.Image _image;
   var _offset = const Offset(0, 0);
   double _scale = 1;
 
-  AspectImage(
+  ScaledImage(
     this._image, {
     Offset offset = const Offset(0, 0),
     double scale = 1,

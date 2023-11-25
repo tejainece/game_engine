@@ -7,4 +7,4 @@ export 'src/sprite/sprite_component.dart';
 export 'src/sprite/clip.dart';
 export 'src/util/point.dart';
 export 'src/tween.dart';
-export 'src/sprite/aspect_image.dart';
+export 'src/sprite/image.dart';
