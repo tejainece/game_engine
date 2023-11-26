@@ -8,3 +8,4 @@ export 'src/sprite/clip.dart';
 export 'src/util/point.dart';
 export 'src/tween.dart';
 export 'src/sprite/image.dart';
+export 'src/flex/row.dart';

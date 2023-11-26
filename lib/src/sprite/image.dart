@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class ScaledImage with BlockPointerMixin implements Component {
+class ScaledImage with BlockPointerMixin implements Component, FlexComponent {
   late ui.Image _image;
   var _offset = const Offset(0, 0);
   double _scale = 1;
@@ -59,12 +59,18 @@ class ScaledImage with BlockPointerMixin implements Component {
     _update();
   }
 
+  @override
+  Size get size => Size(_image.width * _scale, _image.height * _scale);
+
+  @override
+  Offset get offset => _offset;
   set offset(Offset value) {
     if (_offset == value) return;
     _offset = value;
     _update();
   }
 
+  @override
   void set(
       {ui.Image? image,
       Offset? offset,

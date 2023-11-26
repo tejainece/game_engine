@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:game_engine/game_engine.dart';
 
-class TextComponent with BlockPointerMixin implements Component {
+class TextComponent with BlockPointerMixin implements Component, DimensionedComponent, FlexComponent {
   late TextSpan _text;
   late TextAlign _textAlign;
   late TextDirection _textDirection;
@@ -76,6 +76,7 @@ class TextComponent with BlockPointerMixin implements Component {
     _update();
   }
 
+  @override
   Offset get offset => _offset;
 
   set offset(Offset value) {
@@ -84,6 +85,7 @@ class TextComponent with BlockPointerMixin implements Component {
     _dirty = true;
   }
 
+  @override
   Size get size => _size;
 
   set size(Size value) {
@@ -92,6 +94,7 @@ class TextComponent with BlockPointerMixin implements Component {
     _update();
   }
 
+  @override
   void set(
       {Offset? offset,
       Size? size,
