@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 import 'package:collection/collection.dart';
 
-abstract class FlexComponent implements Component {
+abstract class FlexChild implements Component {
   void set({Offset? offset});
 
   Offset get offset;
@@ -19,13 +19,13 @@ abstract class DimensionedComponent implements Component {
 }
 
 class _Child {
-  final FlexComponent component;
+  final FlexChild component;
   Size? size;
 
   _Child({required this.component, this.size});
 }
 
-class RowComponent implements Component, FlexComponent, DimensionedComponent {
+class RowComponent implements Component, FlexChild, DimensionedComponent {
   DimensionedComponent? _bg;
   final _children = <_Child>[];
   Offset _offset = const Offset(0, 0);
@@ -34,7 +34,7 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
   var _align = MainAxisAlignment.start;
 
   RowComponent(
-      {required List<FlexComponent> children,
+      {required List<FlexChild> children,
       DimensionedComponent? bg,
       Offset offset = const Offset(0, 0),
       Size size = const Size(0, 0),
@@ -53,9 +53,9 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
   @override
   Offset get offset => _offset;
 
-  Iterable<FlexComponent> get children => _children.map((e) => e.component);
+  Iterable<FlexChild> get children => _children.map((e) => e.component);
 
-  set children(Iterable<FlexComponent> children) {
+  set children(Iterable<FlexChild> children) {
     if (_compareChildren(children)) return;
 
     _children.clear();
@@ -66,7 +66,7 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
     _layout();
   }
 
-  bool _compareChildren(Iterable<FlexComponent> children) {
+  bool _compareChildren(Iterable<FlexChild> children) {
     if (children.length != _children.length) {
       return false;
     }
@@ -88,7 +88,7 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
       Size? size,
       CrossAxisAlignment? crossAxisAlignment,
       MainAxisAlignment? align,
-      List<FlexComponent>? children}) {
+      List<FlexChild>? children}) {
     bool needsLayout = false;
     bool dimChanged = false;
     if (offset != null && offset != _offset) {
@@ -120,7 +120,6 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
       needsLayout = true;
     }
     if (needsLayout) {
-      _bg?.set(offset: _offset, size: _size);
       _layout();
       _dirty = true;
     }
@@ -159,7 +158,7 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
       ctx.shouldRender();
     }
 
-    if(_dirty) {
+    if (_dirty) {
       ctx.shouldRender();
       _dirty = false;
     }
@@ -179,10 +178,10 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
           // TODO
         }
 
-        final tmp = offset + child.component.size.width;
-        child.component.set(offset: Offset(tmp, dy));
-        print('row ${child.runtimeType} €{${child.component.offset} ${child.component.size}}'); // TODO remove
-        offset = tmp;
+        child.component.set(offset: Offset(offset, dy));
+        offset += child.component.size.width;
+        /*print(
+            'row ${child.component.runtimeType} ${child.component.offset} ${child.component.size}');*/ // TODO remove
       }
     } else if (_align == MainAxisAlignment.end) {
       double offset = _offset.dx + _size.width;
@@ -214,9 +213,8 @@ class RowComponent implements Component, FlexComponent, DimensionedComponent {
           // TODO
         }
 
-        final tmp = offset + child.component.size.width;
-        child.component.set(offset: Offset(tmp, dy));
-        offset = tmp;
+        child.component.set(offset: Offset(offset, dy));
+        offset += child.component.size.width;
       }
     } else if (_align == MainAxisAlignment.spaceBetween) {
       final totWid = _children.fold(0.0, (p, e) => p + e.component.size.width);
