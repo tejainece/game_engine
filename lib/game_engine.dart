@@ -11,3 +11,5 @@ export 'src/sprite/image.dart';
 export 'src/flex/row.dart';
 export 'src/shape/rect.dart';
 export 'src/flex/flex.dart';
+
+export 'src/transform/rotate.dart';

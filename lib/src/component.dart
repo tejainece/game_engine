@@ -78,3 +78,9 @@ mixin BlockTicksMixin on Object implements Component {
   @override
   void tick(TickCtx ctx) {}
 }
+
+class NullableValue<T> {
+  T? value;
+  
+  NullableValue(this.value);
+}
