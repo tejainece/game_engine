@@ -10,7 +10,7 @@ class RectClip extends Component {
   RectClip(
       {required List<Component> children,
       Offset offset = const Offset(0, 0),
-      Size size= const Size(0, 0)}) {
+      Size size = const Size(0, 0)}) {
     _children.addAll(children);
     _offset = offset;
     _size = size;

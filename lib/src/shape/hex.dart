@@ -49,8 +49,7 @@ class HexComponent implements Component, CanHitTest {
     _update();
   }
 
-  void set(
-      {Offset? position, Size? size, Color? color}) {
+  void set({Offset? position, Size? size, Color? color}) {
     bool needsUpdate = false;
     if (position != null && position != _position) {
       _position = position;

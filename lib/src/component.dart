@@ -81,6 +81,6 @@ mixin BlockTicksMixin on Object implements Component {
 
 class NullableValue<T> {
   T? value;
-  
+
   NullableValue(this.value);
 }

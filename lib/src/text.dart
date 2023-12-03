@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:game_engine/game_engine.dart';
 
-class TextComponent with BlockPointerMixin implements Component, DimensionedComponent, FlexChild {
+class TextComponent
+    with BlockPointerMixin
+    implements Component, DimensionedComponent, FlexChild {
   late TextSpan _text;
   late TextAlign _textAlign;
   late TextDirection _textDirection;

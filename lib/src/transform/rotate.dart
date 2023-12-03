@@ -34,8 +34,12 @@ class Rotate implements Component {
 
   bool _dirty = true;
 
-  void set({double? angleDegree, Offset? offset, Offset? center, NullableValue<Component>? child}) {
-    if(child != null) {
+  void set(
+      {double? angleDegree,
+      Offset? offset,
+      Offset? center,
+      NullableValue<Component>? child}) {
+    if (child != null) {
       this.child = child.value;
     }
     bool anchorChanged = false;
