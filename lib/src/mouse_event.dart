@@ -140,6 +140,12 @@ class TapDetector {
       return null;
     }
 
+    final distance = (_tracker!.down.position - event.position).distanceSquared;
+    if (distance > 10) {
+      _tracker = null;
+      return null;
+    }
+
     final upTime = DateTime.now();
     final dur = upTime.difference(_tracker!.downTime);
     if ((lessThan == null || dur < lessThan!) &&
