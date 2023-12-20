@@ -30,11 +30,35 @@ extension SizeExt on Size {
 
   Offset get o => Offset(width, height);
 
+  Size sub(other) {
+    if(other is num) {
+      return Size(width - other, height - other);
+    } else if(other is Size) {
+      return Size(width - other.width, height - other.height);
+    } else if(other is Offset) {
+      return Size(width - other.dx, height - other.dy);
+    } else {
+      throw ArgumentError.value(other, 'other', 'cannot subtract a size with ${other.runtimeType}');
+    }
+  }
+
   Size operator *(num other) => Size(width * other, height * other);
 }
 
 extension OffsetExt on Offset {
   Point<double> get p => Point<double>(dx, dy);
+
+  Offset mul(other) {
+    if(other is num) {
+      return Offset(dx * other, dy * other);
+    } else if(other is Offset) {
+      return Offset(dx * other.dx, dy * other.dy);
+    } else if(other is Size) {
+      return Offset(dx * other.width, dy * other.height);
+    } else {
+      throw ArgumentError.value(other, 'other', 'cannot multiply an offset with ${other.runtimeType}');
+    }
+  }
 }
 
 extension RectangleExt on Rectangle<num> {
