@@ -43,7 +43,9 @@ class _Render {
   bool get flip => sprite.flip;
 }
 
-class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
+class SpriteComponent
+    with BlockPointerMixin
+    implements Component, CanAnimate, DimensionedComponent {
   Sprite? _sprite;
 
   var _offset = const Offset(0, 0);
@@ -111,8 +113,8 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(scale: value);
   }
 
+  @override
   Offset get offset => _offset;
-
   set offset(Offset value) {
     if (_offset == value) return;
     set(offset: value);
@@ -120,6 +122,8 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
 
   Size _size = const Size(0, 0);
 
+  @override
+  Size get size => _size;
   set size(Size value) {
     if (_size == value) return;
     set(size: value);
@@ -132,6 +136,7 @@ class SpriteComponent with BlockPointerMixin implements Component, CanAnimate {
     set(anchor: value);
   }
 
+  @override
   void set(
       {Sprite? sprite,
       double? scale,

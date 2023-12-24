@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:game_engine/game_engine.dart';
 
 class Rotate implements Component {
-  Component? child;
+  DimensionedComponent? child;
   Offset _offset = Offset.zero;
   double _angleDegreeACW = 0;
   Offset _center = Offset.zero;
@@ -23,13 +23,25 @@ class Rotate implements Component {
 
   @override
   void render(Canvas canvas) {
+    Offset translation = _offset + _anchor;
+
     canvas.save();
-    canvas.translate(-_anchor.dx, -_anchor.dy);
-    canvas.rotate(-_angleDegreeACW);
-    canvas.translate(_anchor.dx, _anchor.dy);
+    canvas.translate(-translation.dx, -translation.dy);
+    // TODO canvas.rotate(-_angleDegreeACW);
+    canvas.translate(translation.dx, translation.dy);
 
     child?.render(canvas);
     canvas.restore();
+  }
+
+  @override
+  void tick(TickCtx ctx) {
+    if (_dirty) {
+      _dirty = false;
+      ctx.shouldRender();
+    }
+
+    child?.tick(ctx);
   }
 
   bool _dirty = true;
@@ -38,7 +50,7 @@ class Rotate implements Component {
       {double? angleDegree,
       Offset? offset,
       Offset? center,
-      NullableValue<Component>? child}) {
+      NullableValue<DimensionedComponent>? child}) {
     if (child != null) {
       this.child = child.value;
     }
@@ -53,6 +65,7 @@ class Rotate implements Component {
       _dirty = true;
       anchorChanged = true;
     }
+    this.child?.set(offset: _offset);
     if (anchorChanged) {
       _anchor = _offset + _center;
     }
@@ -60,15 +73,5 @@ class Rotate implements Component {
       _angleDegreeACW = angleDegree;
       _dirty = true;
     }
-  }
-
-  @override
-  void tick(TickCtx ctx) {
-    if (_dirty) {
-      _dirty = false;
-      ctx.shouldRender();
-    }
-
-    child?.tick(ctx);
   }
 }
