@@ -5,7 +5,7 @@ import 'package:game_engine/game_engine.dart';
 class Rotate implements Component {
   DimensionedComponent? child;
   Offset _offset = Offset.zero;
-  double _angleDegreeACW = 0;
+  double _angle = 0;
   Offset _center = Offset.zero;
 
   Rotate(
@@ -23,14 +23,16 @@ class Rotate implements Component {
 
   @override
   void render(Canvas canvas) {
-    Offset translation = _offset + _anchor;
+    // TODO print('rotate render $_offset ${child?.offset}');
+    // Offset translation = _offset + _anchor;
+    Offset translation = _offset;
 
     canvas.save();
-    canvas.translate(-translation.dx, -translation.dy);
-    // TODO canvas.rotate(-_angleDegreeACW);
     canvas.translate(translation.dx, translation.dy);
-
+    canvas.rotate(_angle);
+    canvas.translate(-translation.dx, -translation.dy);
     child?.render(canvas);
+
     canvas.restore();
   }
 
@@ -69,8 +71,8 @@ class Rotate implements Component {
     if (anchorChanged) {
       _anchor = _offset + _center;
     }
-    if (angleDegree != null && angleDegree != _angleDegreeACW) {
-      _angleDegreeACW = angleDegree;
+    if (angleDegree != null && angleDegree != _angle) {
+      _angle = angleDegree;
       _dirty = true;
     }
   }
