@@ -42,7 +42,9 @@ extension SizeExt on Size {
     }
   }
 
-  Size operator *(num other) => Size(width * other, height * other);
+  Size multiply(num other) => Size(width * other, height * other);
+
+  Size divide(num other) => Size(width / other, height / other);
 }
 
 extension OffsetExt on Offset {
