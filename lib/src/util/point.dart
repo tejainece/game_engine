@@ -48,6 +48,14 @@ extension SizeExt on Size {
 }
 
 extension OffsetExt on Offset {
+  static Offset parse(String s) {
+    final parts = s.split(':');
+    if (parts.length != 2) {
+      throw ArgumentError.value(s, 's', 'invalid offset');
+    }
+    return Offset(double.parse(parts[0]), double.parse(parts[1]));
+  }
+
   Point<double> get p => Point<double>(dx, dy);
 
   Offset mul(other) {

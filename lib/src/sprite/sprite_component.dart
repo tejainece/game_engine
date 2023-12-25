@@ -52,6 +52,7 @@ class SpriteComponent
   var _anchor = const Offset(0, 0);
   double _scale = 1;
   VoidCallback? onLoopOver;
+  final Duration Function()? timeGiver;
 
   SpriteComponent(Sprite sprite,
       {required Offset offset,
@@ -60,6 +61,7 @@ class SpriteComponent
       num? scaleWidth,
       double opacity = 1,
       Size size = const Size(0, 0),
+      this.timeGiver,
       this.onLoopOver}) {
     set(
         sprite: sprite,
@@ -115,6 +117,7 @@ class SpriteComponent
 
   @override
   Offset get offset => _offset;
+
   set offset(Offset value) {
     if (_offset == value) return;
     set(offset: value);
@@ -124,6 +127,7 @@ class SpriteComponent
 
   @override
   Size get size => _size;
+
   set size(Size value) {
     if (_size == value) return;
     set(size: value);
@@ -199,15 +203,24 @@ class SpriteComponent
     }
   }
 
+  Duration? _prevTime;
   @override
   void tick(TickCtx ctx) {
+    Duration dt = ctx.dt;
+    if(timeGiver != null) {
+      final now = timeGiver!();
+      _prevTime ??= now;
+      dt = now - _prevTime!;
+      _prevTime = now;
+    }
+
     bool needsRender = _dirty;
     _dirty = false;
 
     if (_sprite!.frames.length <= 1) {
       // Do nothing
     } else if (!_paused) {
-      _elapsed += ctx.dt;
+      _elapsed += dt;
       final frameInterval = _info!.frame.interval ?? sprite.interval;
       if (_elapsed >= frameInterval) {
         if (_info!.index == sprite.frames.length - 1) {
