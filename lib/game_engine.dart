@@ -5,7 +5,7 @@ export 'src/widget.dart';
 export 'src/text.dart';
 export 'src/sprite/sprite_component.dart';
 export 'src/sprite/clip.dart';
-export 'src/util/point.dart';
+export 'package:flutter_sprite/flutter_sprite.dart';
 export 'src/tween.dart';
 export 'src/sprite/image.dart';
 export 'src/flex/row.dart';

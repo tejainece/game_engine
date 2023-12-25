@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter_sprite/flutter_sprite.dart';
 import 'package:game_engine/game_engine.dart';
 
 class _Render {
@@ -27,13 +26,10 @@ class _Render {
 
   void update(Offset offset, Offset anchor, double scale, Size size) {
     if (flip) {
-      anchor = Offset(size.width - anchor.dx, anchor.dy);
-      flipAnchor = frame.anchor.x * scale;
+      flipAnchor = frame.anchor.dx * scale;
     }
 
-    Offset o =
-        offset + anchor - sprite.anchor.o * scale + frame.translate.o * scale;
-    _dest = o & frame.portion.size.s * scale;
+    _dest = frame.calcRect(sprite, offset, anchor, scale, size);
   }
 
   ui.Image get image => frame.image;
