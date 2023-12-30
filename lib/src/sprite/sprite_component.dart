@@ -203,7 +203,7 @@ class SpriteComponent
   @override
   void tick(TickCtx ctx) {
     Duration dt = ctx.dt;
-    if(timeGiver != null) {
+    if (timeGiver != null) {
       final now = timeGiver!();
       _prevTime ??= now;
       dt = now - _prevTime!;
