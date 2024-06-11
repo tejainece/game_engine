@@ -2,43 +2,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class _Render {
-  final int index;
-  final Sprite sprite;
-  final SpriteFrame frame;
-  late final Rect src;
-  late Rect _dest;
-
-  _Render.make({
-    required this.index,
-    required this.sprite,
-    required this.frame,
-    double scale = 1,
-    required Offset offset,
-    required Offset anchor,
-    required Size size,
-  }) {
-    src = frame.rectangle.rect;
-    update(offset, anchor, scale, size);
-  }
-
-  double flipAnchor = 0;
-
-  void update(Offset offset, Offset anchor, double scale, Size size) {
-    if (flip) {
-      flipAnchor = frame.anchor.dx * scale;
-    }
-
-    _dest = frame.calcRect(sprite, offset, anchor, scale, size);
-  }
-
-  ui.Image get image => frame.image;
-
-  Rect get dest => _dest;
-
-  bool get flip => sprite.flip;
-}
-
 class SpriteComponent
     with BlockPointerMixin
     implements Component, CanAnimate, DimensionedComponent {
@@ -58,14 +21,16 @@ class SpriteComponent
       double opacity = 1,
       Size size = const Size(0, 0),
       this.timeGiver,
-      this.onLoopOver}) {
+      this.onLoopOver,
+      ui.ImageFilter? imageFilter}) {
     set(
         sprite: sprite,
         anchor: anchor,
         offset: offset,
         size: size,
         scale: scale,
-        scaleWidth: scaleWidth);
+        scaleWidth: scaleWidth,
+        imageFilter: imageFilter);
     this.opacity = opacity;
   }
 
@@ -101,6 +66,14 @@ class SpriteComponent
   set opacity(double value) {
     if (opacity == value) return;
     _paint.color = _paint.color.withOpacity(value);
+    _dirty = true;
+  }
+
+  ui.ImageFilter? get imageFilter => _paint.imageFilter;
+
+  set imageFilter(ui.ImageFilter? value) {
+    if (imageFilter == value) return;
+    _paint.imageFilter = value;
     _dirty = true;
   }
 
@@ -143,26 +116,28 @@ class SpriteComponent
       num? scaleWidth,
       Offset? offset,
       Offset? anchor,
-      Size? size}) {
-    bool needsUpdate = false;
+      Size? size,
+      ui.ImageFilter? imageFilter}) {
+    bool needsFrameUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;
-      needsUpdate = true;
+      needsFrameUpdate = true;
     }
     if (size != null && size != _size) {
       _size = size;
-      needsUpdate = true;
+      needsFrameUpdate = true;
     }
     if (anchor != null && anchor != _anchor) {
       _anchor = anchor;
-      needsUpdate = true;
+      needsFrameUpdate = true;
     }
     if (scale != null && scale != _scale) {
       _scale = scale;
-      needsUpdate = true;
+      needsFrameUpdate = true;
     }
     if (sprite != null && sprite != _sprite) {
       this.sprite = sprite;
+      needsFrameUpdate = true;
     }
     if (scaleWidth != null) {
       if (_sprite!.refScale == null) {
@@ -171,10 +146,14 @@ class SpriteComponent
       scale = scaleWidth / _sprite!.refScale!;
       if (scale != _scale) {
         _scale = scale;
-        needsUpdate = true;
+        needsFrameUpdate = true;
       }
     }
-    if (needsUpdate) {
+    if (imageFilter != null) {
+      this.imageFilter = imageFilter;
+      _dirty = true;
+    }
+    if (needsFrameUpdate) {
       _info?.update(_offset, _anchor, _scale, _size);
       _dirty = true;
     }
@@ -200,6 +179,7 @@ class SpriteComponent
   }
 
   Duration? _prevTime;
+
   @override
   void tick(TickCtx ctx) {
     Duration dt = ctx.dt;
@@ -264,4 +244,41 @@ abstract class CanAnimate {
   void pause();
 
   bool get isPaused;
+}
+
+class _Render {
+  final int index;
+  final Sprite sprite;
+  final SpriteFrame frame;
+  late final Rect src;
+  late Rect _dest;
+
+  _Render.make({
+    required this.index,
+    required this.sprite,
+    required this.frame,
+    double scale = 1,
+    required Offset offset,
+    required Offset anchor,
+    required Size size,
+  }) {
+    src = frame.rectangle.rect;
+    update(offset, anchor, scale, size);
+  }
+
+  double flipAnchor = 0;
+
+  void update(Offset offset, Offset anchor, double scale, Size size) {
+    if (flip) {
+      flipAnchor = frame.anchor.dx * scale;
+    }
+
+    _dest = frame.calcRect(sprite, offset, anchor, scale, size);
+  }
+
+  ui.Image get image => frame.image;
+
+  Rect get dest => _dest;
+
+  bool get flip => sprite.flip;
 }
