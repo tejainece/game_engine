@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
 class HexComponent implements Component, CanHitTest {
-  late Offset _position;
+  late Offset _offset;
   late Size _size;
   BorderPainter? _border;
   Color? _color;
@@ -11,21 +11,21 @@ class HexComponent implements Component, CanHitTest {
   Path? _borderPath;
 
   HexComponent(
-      {Offset position = const Offset(0, 0),
+      {Offset offset = const Offset(0, 0),
       Size size = const Size(0, 0),
       Color? color,
       BorderPainter? border}) {
     _color = color;
-    _position = position;
+    _offset = offset;
     _size = size;
     _border = border;
     _update();
   }
 
-  Offset get position => _position;
+  Offset get position => _offset;
   set position(Offset value) {
-    if (_position == value) return;
-    _position = value;
+    if (_offset == value) return;
+    _offset = value;
     _update();
   }
 
@@ -49,10 +49,10 @@ class HexComponent implements Component, CanHitTest {
     _update();
   }
 
-  void set({Offset? position, Size? size, Color? color}) {
+  void set({Offset? offset, Size? size, Color? color}) {
     bool needsUpdate = false;
-    if (position != null && position != _position) {
-      _position = position;
+    if (offset != null && offset != _offset) {
+      _offset = offset;
       needsUpdate = true;
     }
     if (size != null && size != _size) {
