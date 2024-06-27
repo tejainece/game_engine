@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class HexComponent implements Component, CanHitTest {
+class HexComponent implements Component, CanHitTest, DimensionedComponent {
   late Offset _offset;
   late Size _size;
   BorderPainter? _border;
@@ -22,13 +22,15 @@ class HexComponent implements Component, CanHitTest {
     _update();
   }
 
-  Offset get position => _offset;
-  set position(Offset value) {
+  @override
+  Offset get offset => _offset;
+  set offset(Offset value) {
     if (_offset == value) return;
     _offset = value;
     _update();
   }
 
+  @override
   Size get size => _size;
   set size(Size value) {
     if (_size == value) return;
@@ -49,6 +51,7 @@ class HexComponent implements Component, CanHitTest {
     _update();
   }
 
+  @override
   void set({Offset? offset, Size? size, Color? color}) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {
@@ -98,13 +101,13 @@ class HexComponent implements Component, CanHitTest {
     final h4 = size.height / 4;
     final w2 = size.width / 2;
     _path = Path()
-      ..moveTo(position.dx + w2, position.dy + 0) // top mid
-      ..lineTo(position.dx + 0, position.dy + h4) // left top
-      ..lineTo(position.dx + 0, position.dy + h4 * 3) // left bot
-      ..lineTo(position.dx + w2, position.dy + size.height) // bot mid
-      ..lineTo(position.dx + size.width, position.dy + h4 * 3) // right bot
-      ..lineTo(position.dx + size.width, position.dy + h4) // right top
-      ..lineTo(position.dx + w2, position.dy + 0) // top mid
+      ..moveTo(offset.dx + w2, offset.dy + 0) // top mid
+      ..lineTo(offset.dx + 0, offset.dy + h4) // left top
+      ..lineTo(offset.dx + 0, offset.dy + h4 * 3) // left bot
+      ..lineTo(offset.dx + w2, offset.dy + size.height) // bot mid
+      ..lineTo(offset.dx + size.width, offset.dy + h4 * 3) // right bot
+      ..lineTo(offset.dx + size.width, offset.dy + h4) // right top
+      ..lineTo(offset.dx + w2, offset.dy + 0) // top mid
       ..close();
 
     if (_color != null) {
@@ -117,7 +120,7 @@ class HexComponent implements Component, CanHitTest {
 
     if (_border != null) {
       final borderPos =
-          position + Offset(_border!.strokeWidth / 2, _border!.strokeWidth / 2);
+          offset + Offset(_border!.strokeWidth / 2, _border!.strokeWidth / 2);
       final w2 = (size.width - _border!.strokeWidth) / 2;
       final h4 = (size.height - _border!.strokeWidth) / 4;
       _borderPath = Path()
