@@ -6,17 +6,17 @@ class RectComponent
     implements Component, FlexChild, DimensionedComponent {
   Offset _offset;
   Size _size;
-
-  // TODO border
+  BorderPainter? _border;
 
   RectComponent(
       {Color color = Colors.transparent,
       Size size = Size.zero,
-      Offset offset = Offset.zero})
+      Offset offset = Offset.zero,
+      BorderPainter? border})
       : _size = size,
-        _offset = offset {
-    _paint = Paint()..color = color;
-  }
+        _offset = offset,
+        _border = border,
+        _paint = Paint()..color = color;
 
   late final Paint _paint;
 
@@ -57,7 +57,12 @@ class RectComponent
   bool _dirty = true;
 
   @override
-  void set({Offset? offset, Size? size, Color? color, double? opacity}) {
+  void set(
+      {Offset? offset,
+      Size? size,
+      Color? color,
+      double? opacity,
+      BorderPainter? border}) {
     if (offset != null && offset != _offset) {
       _offset = offset;
       _dirty = true;
@@ -68,9 +73,15 @@ class RectComponent
     }
     if (color != null) {
       this.color = color;
+      _dirty = true;
     }
     if (opacity != null) {
       this.opacity = opacity;
+      _dirty = true;
+    }
+    if (border != null) {
+      _border = border;
+      _dirty = true;
     }
   }
 
@@ -85,5 +96,9 @@ class RectComponent
   @override
   void render(Canvas canvas) {
     canvas.drawRect(offset & size, _paint);
+
+    if(_border != null) {
+      canvas.drawRect(offset & size, _border!.paint);
+    }
   }
 }
