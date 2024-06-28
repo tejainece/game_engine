@@ -46,7 +46,7 @@ class TapDetector {
     if(first.pointer == event.pointer) {
       return;
     }
-    if (!first.hasUp || first.pointer != event.pointer) {
+    if (!first.hasUp) {
       _first = _TapTracker(down: event, downTime: now);
       _second = null;
       return;
