@@ -89,7 +89,7 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    // context.canvas.drawColor(Colors.black45, BlendMode.src);
+    context.canvas.drawColor(Colors.black, BlendMode.src);
 
     context.canvas.save();
     context.canvas.translate(offset.dx, offset.dy);
