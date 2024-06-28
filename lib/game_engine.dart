@@ -13,3 +13,5 @@ export 'src/flex/flex.dart';
 export 'src/shape/shape.dart';
 
 export 'src/transform/rotate.dart';
+
+export 'src/events/tap_detector.dart';

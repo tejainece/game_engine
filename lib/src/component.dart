@@ -84,3 +84,7 @@ class NullableValue<T> {
 
   NullableValue(this.value);
 }
+
+abstract class CanHitTest implements Component {
+  bool hitTest(Offset point);
+}
