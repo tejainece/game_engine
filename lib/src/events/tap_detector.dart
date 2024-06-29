@@ -17,6 +17,7 @@ class TapDetector {
     // final point = event.localPosition;
 
     // TODO detect hover
+    print('event: ${event.runtimeType}');
 
     if (event is PointerDownEvent) {
       _handleDown(event);
@@ -28,7 +29,7 @@ class TapDetector {
       print('exit or enter');
       // TODO
       return;
-    } else {
+    } else if(event is PointerCancelEvent) {
       _first = null;
       _second = null;
       return;
