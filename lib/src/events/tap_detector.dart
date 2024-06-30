@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -17,7 +15,7 @@ class TapDetector {
     // final point = event.localPosition;
 
     // TODO detect hover
-    print('event: ${event.runtimeType}');
+    // print('event: ${event.runtimeType}');
 
     if (event is PointerDownEvent) {
       _handleDown(event);
@@ -26,12 +24,16 @@ class TapDetector {
       _handleUp(event);
       return;
     } else if (event is PointerExitEvent || event is PointerEnterEvent) {
-      print('exit or enter');
-      // TODO
       return;
     } else if(event is PointerCancelEvent) {
       _first = null;
       _second = null;
+      return;
+    } else if(event is PointerHoverEvent) {
+      // print('hover');
+      return;
+    } else if(event is PointerMoveEvent) {
+      // print('move');
       return;
     }
   }
@@ -124,9 +126,6 @@ class TapDetector {
       onTap?.call(first.makeClickEvent());
     }
   }
-
-  static const longPressDuration = Duration(seconds: 3);
-  static const shortPressDuration = Duration(seconds: 2);
 }
 
 class _TapTracker {
@@ -148,7 +147,8 @@ class _TapTracker {
   }
 
   bool get isLongPress =>
-      upTime!.difference(downTime) > const Duration(milliseconds: 1000);
+      upTime!.difference(downTime) >= longPressDuration;
+  bool get isPress => upTime!.difference(downTime) < longPressDuration;
 
   int get pointer => down.pointer;
 
@@ -158,6 +158,8 @@ class _TapTracker {
     }
     return ClickEvent(down: down, downTime: downTime, up: up!, upTime: upTime!);
   }
+
+  static const longPressDuration = Duration(milliseconds: 1000);
 }
 
 class ClickEvent {
