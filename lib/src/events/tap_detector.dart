@@ -25,14 +25,14 @@ class TapDetector {
       return;
     } else if (event is PointerExitEvent || event is PointerEnterEvent) {
       return;
-    } else if(event is PointerCancelEvent) {
+    } else if (event is PointerCancelEvent) {
       _first = null;
       _second = null;
       return;
-    } else if(event is PointerHoverEvent) {
+    } else if (event is PointerHoverEvent) {
       // print('hover');
       return;
-    } else if(event is PointerMoveEvent) {
+    } else if (event is PointerMoveEvent) {
       // print('move');
       return;
     }
@@ -46,7 +46,7 @@ class TapDetector {
       return;
     }
     final first = _first!;
-    if(first.pointer == event.pointer) {
+    if (first.pointer == event.pointer) {
       return;
     }
     if (!first.hasUp) {
@@ -56,7 +56,7 @@ class TapDetector {
     }
 
     if (_second != null) {
-      if(_second!.pointer == event.pointer) {
+      if (_second!.pointer == event.pointer) {
         return;
       }
       _first = _TapTracker(down: event, downTime: now);
@@ -101,7 +101,7 @@ class TapDetector {
       _first = null;
       return;
     }
-    if(first.up != null && first.up!.pointer == event.pointer) {
+    if (first.up != null && first.up!.pointer == event.pointer) {
       return;
     }
     first.setUp(event);
@@ -146,8 +146,7 @@ class _TapTracker {
     upTime = DateTime.now();
   }
 
-  bool get isLongPress =>
-      upTime!.difference(downTime) >= longPressDuration;
+  bool get isLongPress => upTime!.difference(downTime) >= longPressDuration;
   bool get isPress => upTime!.difference(downTime) < longPressDuration;
 
   int get pointer => down.pointer;

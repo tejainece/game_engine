@@ -97,7 +97,7 @@ class RectComponent
   void render(Canvas canvas) {
     canvas.drawRect(offset & size, _paint);
 
-    if(_border != null) {
+    if (_border != null) {
       canvas.drawRect(offset & size, _border!.paint);
     }
   }

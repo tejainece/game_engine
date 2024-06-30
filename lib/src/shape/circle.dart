@@ -97,7 +97,7 @@ class CircleComponent
   void render(Canvas canvas) {
     canvas.drawOval(offset & size, _paint);
 
-    if(_border != null) {
+    if (_border != null) {
       canvas.drawOval(offset & size, _border!.paint);
     }
   }
