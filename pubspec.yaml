@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_sprite: #^3.0.5
-    path: ../../flutter_sprite
+    path: ../flutter_sprite
   collection: ^1.14.12
 
 dev_dependencies:
