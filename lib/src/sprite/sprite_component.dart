@@ -38,7 +38,10 @@ class SpriteComponent
 
   _Render? _info;
 
-  final _paint = Paint()..color = const Color.fromRGBO(255, 255, 255, 1);
+  final _paint = Paint()
+    ..isAntiAlias = true
+    ..filterQuality = FilterQuality.high
+    ..color = const Color.fromRGBO(255, 255, 255, 1);
 
   Sprite get sprite => _sprite!;
 

@@ -29,7 +29,9 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
   late Rect _dest = Rect.fromLTWH(_offset.dx, _offset.dy,
       _image.width.toDouble() * _scale, _image.height.toDouble() * _scale);
 
-  final _paint = Paint();
+  final _paint = Paint()
+    ..isAntiAlias = true
+    ..filterQuality = FilterQuality.high;
 
   @override
   void render(Canvas canvas) {
