@@ -8,19 +8,24 @@ class GameWidget extends LeafRenderObjectWidget {
   final ValueChanged<PointerEvent>? onPanZoom;
   final List<List<Component>> components;
   final ValueChanged<Offset>? onMoveOffset;
+  final bool debug;
 
   const GameWidget(
       {Key? key,
       this.onResize,
       this.onPanZoom,
       this.onMoveOffset,
-      required this.components})
+      required this.components,
+      this.debug = false})
       : super(key: key);
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
       GameWidgetRenderObject(
-          onResize: onResize, components: components, onPanZoom: onPanZoom);
+          onResize: onResize,
+          components: components,
+          onPanZoom: onPanZoom,
+          debug: debug);
 
   @override
   void updateRenderObject(
@@ -39,12 +44,14 @@ class GameWidgetRenderObject extends RenderBox {
   ValueChanged<PointerEvent>? onPanZoom;
   ValueChanged<Offset>? onMoveOffset;
   List<List<Component>> _components;
+  final bool debug;
 
   GameWidgetRenderObject(
       {ValueChanged<Size>? onResize,
       this.onPanZoom,
       this.onMoveOffset,
-      required List<List<Component>> components})
+      required List<List<Component>> components,
+      this.debug = false})
       : _components = components {
     this.onResize = onResize;
   }
@@ -89,6 +96,7 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    final clock = Stopwatch()..start();
     context.canvas.drawColor(Colors.black, BlendMode.src);
 
     context.canvas.save();
@@ -99,7 +107,9 @@ class GameWidgetRenderObject extends RenderBox {
       }
     }
     context.canvas.restore();
-    // print('${DateTime.now()} => painting took ${start.elapsed}');
+    if (debug) {
+      print('${DateTime.now()} => painting took ${clock.elapsed}');
+    }
   }
 
   @override
@@ -119,6 +129,7 @@ class GameWidgetRenderObject extends RenderBox {
   TickCtx? _ctx;
 
   void _tick(Duration elapsed) {
+    final clock = Stopwatch()..start();
     _ctx ??= TickCtx(timestamp: elapsed, dt: const Duration());
     _ctx!.nextTick(elapsed);
 
@@ -132,6 +143,9 @@ class GameWidgetRenderObject extends RenderBox {
     }
     for (final object in _ctx!.detached) {
       object.onDetach();
+    }
+    if (debug) {
+      print('${DateTime.now()} => ticking took ${clock.elapsed}');
     }
   }
 
