@@ -108,7 +108,7 @@ class GameWidgetRenderObject extends RenderBox {
     }
     context.canvas.restore();
     if (debug) {
-      print('${DateTime.now()} => painting took ${clock.elapsed}');
+      debugPrint('${DateTime.now()} => painting took ${clock.elapsed}');
     }
   }
 
@@ -145,7 +145,7 @@ class GameWidgetRenderObject extends RenderBox {
       object.onDetach();
     }
     if (debug) {
-      print('${DateTime.now()} => ticking took ${clock.elapsed}');
+      debugPrint('${DateTime.now()} => ticking took ${clock.elapsed}');
     }
   }
 
