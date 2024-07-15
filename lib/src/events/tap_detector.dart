@@ -68,7 +68,9 @@ class TapDetector {
       _second = null;
       return;
     }
-    if ((first.down.localPosition - event.localPosition).distance > 10) {
+    final distance = (first.down.localPosition - event.localPosition).distance;
+    // print('distance: $distance');
+    if (distance > tapDistance) {
       _first = _TapTracker(down: event, downTime: now);
       _second = null;
       return;
@@ -81,7 +83,8 @@ class TapDetector {
     if (second != null) {
       final distance =
           (second.down.localPosition - event.localPosition).distance;
-      if (second.pointer != event.pointer || second.hasUp || distance > 10) {
+      // print('distance: $distance');
+      if (second.pointer != event.pointer || second.hasUp || distance > tapDistance) {
         _first = null;
         _second = null;
         return;
@@ -97,7 +100,9 @@ class TapDetector {
       _first = null;
       return;
     }
-    if ((first.down.localPosition - event.localPosition).distance > 10) {
+    final distance = (first.down.localPosition - event.localPosition).distance;
+    // print('distance: $distance');
+    if (distance > tapDistance) {
       _first = null;
       return;
     }
@@ -126,6 +131,8 @@ class TapDetector {
       onTap?.call(first.makeClickEvent());
     }
   }
+
+  static const tapDistance = 40.0;
 }
 
 class _TapTracker {
