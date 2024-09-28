@@ -102,7 +102,7 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
       needsUpdate = true;
     }
     if (opacity != null && opacity != this.opacity) {
-      _paint.color = _paint.color.withOpacity(opacity);
+      _paint.color = _paint.color.withValues(alpha: opacity);
       _dirty = true;
     }
     if (needsUpdate) {
@@ -111,5 +111,5 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
     }
   }
 
-  double get opacity => _paint.color.opacity;
+  double get opacity => _paint.color.a;
 }

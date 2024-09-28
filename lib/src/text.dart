@@ -64,10 +64,10 @@ class TextComponent
   }
 
   double get opacity =>
-      (style.color ?? const Color.fromRGBO(255, 255, 255, 1)).opacity;
+      (style.color ?? const Color.fromRGBO(255, 255, 255, 1)).a;
 
   set opacity(double value) {
-    color = color.withOpacity(value);
+    color = color.withValues(alpha: value);
   }
 
   TextAlign get textAlign => _textAlign;

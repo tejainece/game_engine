@@ -20,11 +20,11 @@ class CircleComponent
 
   late final Paint _paint;
 
-  double get opacity => _paint.color.opacity;
+  double get opacity => _paint.color.a;
 
   set opacity(double value) {
     if (opacity == value) return;
-    _paint.color = _paint.color.withOpacity(value);
+    _paint.color = _paint.color.withValues(alpha: value);
     _dirty = true;
   }
 
