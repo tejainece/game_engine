@@ -83,7 +83,7 @@ class TapDetector {
     if (second != null) {
       final distance =
           (second.down.localPosition - event.localPosition).distance;
-      // print('distance: $distance');
+      print('distance: $distance');
       if (second.pointer != event.pointer || second.hasUp || distance > tapDistance) {
         _first = null;
         _second = null;
