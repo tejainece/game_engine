@@ -6,6 +6,8 @@ import 'package:game_engine/game_engine.dart';
 class MouseInteraction implements Component, CanHitTest {
   late CanHitTest child;
 
+  ValueChanged<ComponentMouseDownEvent>? onMouseDown;
+
   ValueChanged<ClickEvent>? onTap;
 
   ValueChanged<ClickEvent>? onLongPress;
@@ -13,7 +15,7 @@ class MouseInteraction implements Component, CanHitTest {
   ValueChanged? onDoubleTap;
 
   MouseInteraction(
-      {required this.child, this.onTap, this.onDoubleTap, this.onLongPress});
+      {required this.child, this.onMouseDown, this.onTap, this.onDoubleTap, this.onLongPress});
 
   @override
   void render(Canvas canvas) {
@@ -33,6 +35,9 @@ class MouseInteraction implements Component, CanHitTest {
   void handlePointerEvent(PointerEvent event) {
     if (!hitTest(event.localPosition)) {
       return;
+    }
+    if(event is PointerDownEvent) {
+      onMouseDown?.call(ComponentMouseDownEvent(event));
     }
     _tapDetector.handlePointerEvent(event);
   }
@@ -76,4 +81,12 @@ mixin OnPointerEventsMixin implements Component, OnPointerEvents {
   Future<void> disposePointerEventController() async {
     await _controller.close();
   }
+}
+
+abstract class ComponentMouseEvent {}
+
+class ComponentMouseDownEvent implements ComponentMouseEvent {
+  final PointerDownEvent event;
+
+  ComponentMouseDownEvent(this.event);
 }

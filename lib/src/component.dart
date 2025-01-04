@@ -4,11 +4,14 @@ class TickCtx {
   Duration _timestamp;
   Duration _dt;
 
-  TickCtx({required Duration timestamp, required Duration dt})
+  TickCtx(
+      {required Duration timestamp,
+      required Duration dt,
+      required Size canvasSize})
       : _timestamp = timestamp,
         _dt = dt;
 
-  void nextTick(Duration timestamp) {
+  void nextTick(Duration timestamp, Size size) {
     _dt = timestamp - _timestamp;
     _timestamp = timestamp;
 
@@ -18,6 +21,7 @@ class TickCtx {
   }
 
   Duration get timestamp => _timestamp;
+
   Duration get dt => _dt;
 
   bool _needsRender = false;
@@ -48,9 +52,11 @@ abstract class NeedsDetach {
   void onDetach();
 }
 
-abstract class Component {
+abstract class CanvasPainter {
   void render(Canvas canvas);
+}
 
+abstract class Component implements CanvasPainter {
   void tick(TickCtx ctx);
 
   void handlePointerEvent(PointerEvent event);
