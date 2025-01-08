@@ -1,40 +1,56 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
 class SpriteComponent
-    with BlockPointerMixin
-    implements Component, CanAnimate, DimensionedComponent {
+    implements Component, CanAnimate, SizedPositionedComponent, NeedsTick {
   Sprite? _sprite;
 
-  var _offset = const Offset(0, 0);
-  var _anchor = const Offset(0, 0);
+  Offset _offset;
+  Offset _anchor;
   double _scale = 1;
   VoidCallback? onLoopOver;
   final Duration Function()? timeGiver;
 
-  SpriteComponent(Sprite sprite,
-      {required Offset offset,
-      required Offset anchor,
+  SpriteComponent(
+      {Sprite? sprite,
+      Offset offset = Offset.zero,
+      Offset anchor = Offset.zero,
       double scale = 1,
       num? scaleWidth,
       double opacity = 1,
       Size size = const Size(0, 0),
       this.timeGiver,
       this.onLoopOver,
-      ui.ImageFilter? imageFilter}) {
-    set(
-        sprite: sprite,
-        anchor: anchor,
-        offset: offset,
-        size: size,
-        scale: scale,
-        scaleWidth: scaleWidth,
-        imageFilter: imageFilter);
+      ui.ImageFilter? imageFilter})
+      : _sprite = sprite,
+        _offset = offset,
+        _size = size,
+        _scale = scale,
+        _anchor = anchor {
+    set(scaleWidth: scaleWidth, imageFilter: imageFilter);
     this.opacity = opacity;
   }
 
-  bool _dirty = true;
+  @override
+  void render(Canvas canvas) {
+    if (_info == null) return;
+
+    if (_info!.flip) {
+      canvas.save();
+      double dx = -(_info!._dest.left + _info!.flipAnchor);
+      canvas.translate(-dx, 0.0);
+      canvas.scale(-1.0, 1.0);
+      canvas.translate(dx, 0.0);
+    }
+
+    canvas.drawImageRect(_info!.image, _info!.src, _info!.dest, _paint);
+
+    if (_info!.flip) {
+      canvas.restore();
+    }
+  }
 
   _Render? _info;
 
@@ -61,7 +77,7 @@ class SpriteComponent
     } else {
       _info = null;
     }
-    _dirty = true;
+    _ctx?.requestRender(this);
   }
 
   double get opacity => _paint.color.a;
@@ -69,7 +85,7 @@ class SpriteComponent
   set opacity(double value) {
     if (opacity == value) return;
     _paint.color = _paint.color.withValues(alpha: value);
-    _dirty = true;
+    _ctx?.requestRender(this);
   }
 
   ui.ImageFilter? get imageFilter => _paint.imageFilter;
@@ -77,7 +93,7 @@ class SpriteComponent
   set imageFilter(ui.ImageFilter? value) {
     if (imageFilter == value) return;
     _paint.imageFilter = value;
-    _dirty = true;
+    _ctx?.requestRender(this);
   }
 
   double get scale => _scale;
@@ -152,39 +168,24 @@ class SpriteComponent
         needsFrameUpdate = true;
       }
     }
+    bool dirty = false;
     if (imageFilter != null) {
       this.imageFilter = imageFilter;
-      _dirty = true;
+      dirty = true;
     }
     if (needsFrameUpdate) {
       _info?.update(_offset, _anchor, _scale, _size);
-      _dirty = true;
+      dirty = true;
     }
-  }
-
-  @override
-  void render(Canvas canvas) {
-    if (_info == null) return;
-
-    if (_info!.flip) {
-      canvas.save();
-      double dx = -(_info!._dest.left + _info!.flipAnchor);
-      canvas.translate(-dx, 0.0);
-      canvas.scale(-1.0, 1.0);
-      canvas.translate(dx, 0.0);
-    }
-
-    canvas.drawImageRect(_info!.image, _info!.src, _info!.dest, _paint);
-
-    if (_info!.flip) {
-      canvas.restore();
+    if (dirty) {
+      _ctx?.requestRender(this);
     }
   }
 
   Duration? _prevTime;
 
   @override
-  void tick(TickCtx ctx) {
+  void tick(TickContext ctx) {
     Duration dt = ctx.dt;
     if (timeGiver != null) {
       final now = timeGiver!();
@@ -193,8 +194,7 @@ class SpriteComponent
       _prevTime = now;
     }
 
-    bool needsRender = _dirty;
-    _dirty = false;
+    bool needsRender = false;
 
     if (_sprite!.frames.length <= 1) {
       // Do nothing
@@ -220,7 +220,9 @@ class SpriteComponent
       }
     }
 
-    if (needsRender) ctx.shouldRender();
+    if (needsRender) {
+      _ctx?.requestRender(this);
+    }
   }
 
   Duration _elapsed = const Duration();
@@ -238,6 +240,13 @@ class SpriteComponent
   @override
   void pause() {
     _paused = true;
+  }
+
+  ComponentContext? _ctx;
+
+  @override
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
   }
 }
 

@@ -1,58 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class HexComponent implements Component, CanHitTest, DimensionedComponent {
+class HexComponent implements Component, SizedPositionedComponent, ShapeComponent {
   late Offset _offset;
   late Size _size;
-  BorderPainter? _border;
-  Color? _color;
+  Stroke? _stroke;
+  Fill? _fill;
+  Paint? _strokePaint;
+  Paint? _fillPaint;
 
   late Path _path;
+  // TODO do we need border paint
   Path? _borderPath;
 
   HexComponent(
       {Offset offset = const Offset(0, 0),
       Size size = const Size(0, 0),
-      Color? color,
-      BorderPainter? border}) {
-    _color = color;
-    _offset = offset;
-    _size = size;
-    _border = border;
+      Stroke? stroke,
+      Fill? fill})
+      : _offset = offset,
+        _size = size,
+        _stroke = stroke,
+        _fill = fill {
+    _strokePaint = _stroke?.paint;
+    _fillPaint = _fill?.paint;
     _update();
   }
 
   @override
-  Offset get offset => _offset;
-  set offset(Offset value) {
-    if (_offset == value) return;
-    _offset = value;
-    _update();
-  }
-
-  @override
-  Size get size => _size;
-  set size(Size value) {
-    if (_size == value) return;
-    _size = value;
-    _update();
-  }
-
-  set border(BorderPainter? border) {
-    if (border == _border) return;
-    _border = border;
-    _update();
-  }
-
-  Color? get color => _color;
-  set color(Color? value) {
-    if (_color == value) return;
-    _color = value;
-    _update();
-  }
-
-  @override
-  void set({Offset? offset, Size? size, Color? color}) {
+  void set(
+      {Offset? offset,
+      Size? size,
+      Argument<Stroke?>? stroke,
+      Argument<Fill?>? fill}) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;
@@ -62,42 +42,33 @@ class HexComponent implements Component, CanHitTest, DimensionedComponent {
       _size = size;
       needsUpdate = true;
     }
-    if (color != null && color != _color) {
-      _color = color;
+    if (stroke != null && stroke.value != _stroke) {
+      _stroke = stroke.value;
+      _strokePaint = _stroke?.paint;
       needsUpdate = true;
     }
-    if (needsUpdate) _update();
-  }
-
-  Paint? _paint;
-
-  @override
-  bool hitTest(Offset point) => _path.contains(point);
-
-  @override
-  void tick(TickCtx ctx) {
-    if (_dirty) {
-      _dirty = false;
-      ctx.shouldRender();
+    if (fill != null && fill.value != _fill) {
+      _fill = fill.value;
+      _fillPaint = _fill?.paint;
+      needsUpdate = true;
+    }
+    if (needsUpdate) {
+      _update();
+      _ctx?.requestRender(this);
     }
   }
-
-  bool _dirty = true;
 
   @override
   void render(Canvas canvas) {
-    if (_paint != null) {
-      canvas.drawPath(_path, _paint!);
+    if (_fillPaint != null) {
+      canvas.drawPath(_path, _fillPaint!);
     }
-
-    if (_borderPath != null && _border != null) {
-      canvas.drawPath(_borderPath!, _border!.paint);
+    if (_borderPath != null && _strokePaint != null) {
+      canvas.drawPath(_borderPath!, _strokePaint!);
     }
   }
 
   void _update() {
-    _dirty = true;
-
     final h4 = size.height / 4;
     final w2 = size.width / 2;
     _path = Path()
@@ -110,19 +81,11 @@ class HexComponent implements Component, CanHitTest, DimensionedComponent {
       ..lineTo(offset.dx + w2, offset.dy + 0) // top mid
       ..close();
 
-    if (_color != null) {
-      _paint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = _color!;
-    } else {
-      _paint = null;
-    }
-
-    if (_border != null) {
+    if (_stroke != null) {
       final borderPos =
-          offset + Offset(_border!.strokeWidth / 2, _border!.strokeWidth / 2);
-      final w2 = (size.width - _border!.strokeWidth) / 2;
-      final h4 = (size.height - _border!.strokeWidth) / 4;
+          offset + Offset(_stroke!.strokeWidth / 2, _stroke!.strokeWidth / 2);
+      final w2 = (size.width - _stroke!.strokeWidth) / 2;
+      final h4 = (size.height - _stroke!.strokeWidth) / 4;
       _borderPath = Path()
         ..moveTo(borderPos.dx + w2, borderPos.dy + 0) // n
         ..lineTo(borderPos.dx + 0, borderPos.dy + h4) // nw
@@ -137,25 +100,20 @@ class HexComponent implements Component, CanHitTest, DimensionedComponent {
     }
   }
 
+  ComponentContext? _ctx;
+
   @override
-  void handlePointerEvent(PointerEvent event) {}
-}
-
-class BorderPainter {
-  BorderAlign align = BorderAlign.center;
-
-  BorderPainter({required Color color, required double strokeWidth}) {
-    this.color = color;
-    this.strokeWidth = strokeWidth;
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
   }
 
-  final paint = Paint()..style = PaintingStyle.stroke;
+  @override
+  Offset get offset => _offset;
 
-  Color get color => paint.color;
-  set color(Color value) => paint.color = value;
+  @override
+  Size get size => _size;
 
-  double get strokeWidth => paint.strokeWidth;
-  set strokeWidth(double value) => paint.strokeWidth = value;
+  // TODO take into account transform
+  @override
+  bool hitTest(Offset point) => _path.contains(point);
 }
-
-enum BorderAlign { inside, center, outside }

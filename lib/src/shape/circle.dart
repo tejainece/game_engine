@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class CircleComponent
+/*
+class OvalComponent
     with BlockPointerMixin
-    implements Component, FlexChild, DimensionedComponent {
+    implements Component, FlexChild, DimensionedComponent, ShapeComponent {
   Offset _offset;
   Size _size;
-  BorderPainter? _border;
+  Stroke? _stroke;
+  Fill? _fill;
+  Paint? _strokePaint;
+  Paint? _fillPaint;
 
-  CircleComponent(
+  OvalComponent(
       {Size size = Size.zero,
       Offset offset = Offset.zero,
-      Color color = Colors.transparent,
-      BorderPainter? border})
-      : _size = size,
-        _offset = offset,
-        _border = border,
-        _paint = Paint()..color = color;
-
-  late final Paint _paint;
-
-  double get opacity => _paint.color.a;
-
-  set opacity(double value) {
-    if (opacity == value) return;
-    _paint.color = _paint.color.withValues(alpha: value);
-    _dirty = true;
+      Stroke? stroke,
+      Fill? fill})
+      : _offset = offset,
+        _size = size,
+        _stroke = stroke,
+        _fill = fill {
+    _strokePaint = stroke?.paint;
+    _fillPaint = fill?.paint;
+    // TODO update
   }
 
-  Color get color => _paint.color;
-
-  set color(Color value) {
-    if (color == value) return;
-    _paint.color = value;
-    _dirty = true;
+  @override
+  void render(Canvas canvas) {
+    if (_strokePaint != null) {
+      canvas.drawOval(offset & size, _strokePaint!);
+    }
+    if (_fillPaint != null) {
+      canvas.drawOval(offset & size, _fillPaint!);
+    }
   }
 
   @override
@@ -60,9 +60,8 @@ class CircleComponent
   void set(
       {Offset? offset,
       Size? size,
-      Color? color,
-      double? opacity,
-      BorderPainter? border}) {
+      Argument<Stroke?>? stroke,
+      Argument<Fill?>? fill}) {
     if (offset != null && offset != _offset) {
       _offset = offset;
       _dirty = true;
@@ -71,16 +70,14 @@ class CircleComponent
       _size = size;
       _dirty = true;
     }
-    if (color != null) {
-      this.color = color;
+    if (stroke != null && stroke.value != _stroke) {
+      _stroke = stroke.value;
+      _strokePaint = _stroke?.paint;
       _dirty = true;
     }
-    if (opacity != null) {
-      this.opacity = opacity;
-      _dirty = true;
-    }
-    if (border != null) {
-      _border = border;
+    if (fill != null && fill.value != _fill) {
+      _fill = fill.value;
+      _fillPaint = _fill?.paint;
       _dirty = true;
     }
   }
@@ -92,13 +89,5 @@ class CircleComponent
       _dirty = false;
     }
   }
-
-  @override
-  void render(Canvas canvas) {
-    canvas.drawOval(offset & size, _paint);
-
-    if (_border != null) {
-      canvas.drawOval(offset & size, _border!.paint);
-    }
-  }
 }
+ */

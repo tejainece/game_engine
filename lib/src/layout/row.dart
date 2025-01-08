@@ -1,8 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:collection/collection.dart';
 
-abstract class FlexChild implements Component {
+export 'box.dart';
+
+abstract class PositionedComponent implements Component {
   void set({Offset? offset});
 
   Offset get offset;
@@ -10,42 +12,27 @@ abstract class FlexChild implements Component {
   Size get size;
 }
 
-abstract class DimensionedComponent implements Component {
+abstract class SizedPositionedComponent implements Component {
+  void set({Offset? offset, Size? size});
+
   Offset get offset;
 
   Size get size;
-
-  void set({Offset? offset, Size? size});
 }
 
-class _Child {
-  final FlexChild component;
-  Size? size;
+abstract class OnResizeComponent implements SizedPositionedComponent {
+  void onResizeListener(Object key, VoidCallback callback);
 
-  _Child({required this.component, this.size});
+  void deregisterOnResizeListener(Object key);
 }
 
-class RowComponent implements Component, FlexChild, DimensionedComponent {
-  DimensionedComponent? _bg;
-  final _children = <_Child>[];
+class RowComponent implements Component, PositionedComponent, SizedPositionedComponent, NeedsDetach {
+  SizedPositionedComponent? _bg;
+  List<_Child> _children = [];
   Offset _offset = const Offset(0, 0);
   Size _size = const Size(0, 0);
   var _crossAxisAlign = CrossAxisAlignment.start;
   var _align = MainAxisAlignment.start;
-
-  RowComponent(
-      {required List<FlexChild> children,
-      DimensionedComponent? bg,
-      Offset offset = const Offset(0, 0),
-      Size size = const Size(0, 0),
-      CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
-      MainAxisAlignment align = MainAxisAlignment.start}) {
-    _bg = bg;
-    _crossAxisAlign = crossAxisAlignment;
-    _align = align;
-
-    set(offset: offset, size: size, children: children);
-  }
 
   @override
   Size get size => _size;
@@ -53,34 +40,30 @@ class RowComponent implements Component, FlexChild, DimensionedComponent {
   @override
   Offset get offset => _offset;
 
-  Iterable<FlexChild> get children => _children.map((e) => e.component);
-
-  set children(Iterable<FlexChild> children) {
-    if (_compareChildren(children)) return;
-
-    _children.clear();
-    for (final child in children) {
-      _children.add(_Child(component: child, size: child.size));
-    }
-
+  RowComponent(
+      {required List<PositionedComponent> children,
+      SizedPositionedComponent? bg,
+      Offset offset = const Offset(0, 0),
+      Size size = const Size(0, 0),
+      CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
+      MainAxisAlignment align = MainAxisAlignment.start})
+      : _offset = offset,
+        _size = size,
+        _bg = bg,
+        _crossAxisAlign = crossAxisAlignment,
+        _align = align {
+    _bg?.set(offset: offset, size: size);
+    _updateChildren(children);
     _layout();
   }
 
-  bool _compareChildren(Iterable<FlexChild> children) {
-    if (children.length != _children.length) {
-      return false;
+  @override
+  void render(Canvas canvas) {
+    _bg?.render(canvas);
+    for (final child in _children) {
+      child.component.render(canvas);
     }
-
-    for (final pair in IterableZip([children, this.children])) {
-      if (pair[0] != pair[0]) {
-        return false;
-      }
-    }
-
-    return true;
   }
-
-  bool _dirty = true;
 
   @override
   void set(
@@ -88,9 +71,17 @@ class RowComponent implements Component, FlexChild, DimensionedComponent {
       Size? size,
       CrossAxisAlignment? crossAxisAlignment,
       MainAxisAlignment? align,
-      List<FlexChild>? children}) {
+      SizedPositionedComponent? bg,
+      List<PositionedComponent>? children}) {
     bool needsLayout = false;
     bool dimChanged = false;
+    if (bg != null && bg != _bg) {
+      if (_bg != null) {
+        _ctx?.unregisterComponent(_bg!);
+      }
+      _bg = bg;
+      _ctx?.registerComponent(_bg!);
+    }
     if (offset != null && offset != _offset) {
       _offset = offset;
       needsLayout = true;
@@ -112,56 +103,54 @@ class RowComponent implements Component, FlexChild, DimensionedComponent {
       _align = align;
       needsLayout = true;
     }
-    if (children != null && !_compareChildren(children)) {
-      _children.clear();
-      for (final child in children) {
-        _children.add(_Child(component: child));
-      }
+    if (children != null && _compareChildren(children)) {
+      _updateChildren(children);
       needsLayout = true;
     }
     if (needsLayout) {
       _layout();
-      _dirty = true;
+      _ctx?.requestRender(this);
     }
   }
 
-  @override
-  void handlePointerEvent(PointerEvent event) {
-    _bg?.handlePointerEvent(event);
-    for (final child in _children) {
-      child.component.handlePointerEvent(event);
+  Map<PositionedComponent, _Child> _childSet = {};
+
+  void _updateChildren(List<PositionedComponent> children) {
+    final newChildren = <_Child>[];
+    final childSet = <PositionedComponent, _Child>{};
+    for(final child in children) {
+      _Child? existing = _childSet[child];
+      if (existing == null) {
+        existing = _Child(component: child);
+        _childSet[child] = existing;
+        _ctx?.registerComponent(child);
+      }
+      childSet[child] = existing;
+      newChildren.add(existing);
     }
+    for(final existing in _childSet.values) {
+      if (!childSet.containsKey(existing.component)) {
+        _ctx?.unregisterComponent(existing.component);
+      }
+    }
+    _childSet = childSet;
+    _children = newChildren;
   }
 
-  @override
-  void render(Canvas canvas) {
-    _bg?.render(canvas);
-    for (final child in _children) {
-      child.component.render(canvas);
-    }
-  }
+  List<PositionedComponent> get children => _children.map((e) => e.component).toList();
 
-  @override
-  void tick(TickCtx ctx) {
-    _bg?.tick(ctx);
-    bool shouldLayout = false;
-    for (final child in _children) {
-      child.component.tick(ctx);
-      if (child.size != child.component.size) {
-        child.size = child.component.size;
-        shouldLayout = true;
+  bool _compareChildren(Iterable<PositionedComponent> children) {
+    if (children.length != _children.length) {
+      return false;
+    }
+
+    for (final pair in IterableZip([children, this.children])) {
+      if (pair[0] != pair[1]) {
+        return false;
       }
     }
 
-    if (shouldLayout) {
-      _layout();
-      ctx.shouldRender();
-    }
-
-    if (_dirty) {
-      ctx.shouldRender();
-      _dirty = false;
-    }
+    return true;
   }
 
   void _layout() {
@@ -272,4 +261,35 @@ class RowComponent implements Component, FlexChild, DimensionedComponent {
       }
     }
   }
+
+  ComponentContext? _ctx;
+
+  @override
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
+    if (_bg != null) {
+      _ctx?.registerComponent(_bg!);
+    }
+    for (final child in _children) {
+      _ctx?.registerComponent(child.component);
+    }
+  }
+
+  @override
+  void onDetach(ComponentContext ctx) {
+    if (_bg != null) {
+      ctx.unregisterComponent(_bg!);
+    }
+    for (final child in _children) {
+      ctx.unregisterComponent(child.component);
+    }
+    _ctx = null;
+  }
+}
+
+class _Child {
+  final PositionedComponent component;
+  Size? size;
+
+  _Child({required this.component, this.size});
 }

@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:vector_path/vector_path.dart';
+
+part 'context.dart';
+part 'tick_context.dart';
 
 class GameWidget extends StatefulWidget {
   final ValueChanged<Size>? onResize;
   final Color color;
   final CanvasTransformer? transformer;
-  final List<List<Component>> components;
+  final Component? component;
   final bool debug;
   final ValueChanged<PanData>? onPan;
   final ValueChanged<ScaleData>? onScale;
 
   const GameWidget(
       {super.key,
-      required this.components,
+      this.component,
       this.color = Colors.black,
       this.onResize,
       this.transformer,
@@ -39,7 +43,7 @@ class _GameWidgetState extends State<GameWidget> {
   @override
   Widget build(BuildContext context) {
     final child = _GameWidget(
-      components: widget.components,
+      component: widget.component,
       color: widget.color,
       onResize: widget.onResize,
       transformer: widget.transformer,
@@ -61,7 +65,7 @@ class _GameWidget extends LeafRenderObjectWidget {
   final ValueChanged<Size>? onResize;
   final Color color;
   final CanvasTransformer? transformer;
-  final List<List<Component>> components;
+  final Component? component;
   final bool debug;
 
   const _GameWidget(
@@ -69,7 +73,7 @@ class _GameWidget extends LeafRenderObjectWidget {
       this.onResize,
       this.color = Colors.black,
       this.transformer,
-      required this.components,
+      required this.component,
       this.debug = false})
       : super(key: key);
 
@@ -79,7 +83,7 @@ class _GameWidget extends LeafRenderObjectWidget {
           onResize: onResize,
           color: color,
           transformer: transformer,
-          components: components,
+          component: component,
           debug: debug);
 
   @override
@@ -89,7 +93,7 @@ class _GameWidget extends LeafRenderObjectWidget {
         onResize: onResize,
         color: color,
         transformer: transformer,
-        components: components,
+        component: component,
         debug: debug);
   }
 }
@@ -98,18 +102,18 @@ class GameWidgetRenderObject extends RenderBox {
   Size _oldSize = Size.zero;
   ValueChanged<Size>? _onResize;
   Color color;
-  List<List<Component>> _components;
+  Component? _component;
   bool debug;
   CanvasTransformer? transformer;
 
   GameWidgetRenderObject(
       {ValueChanged<Size>? onResize,
       required this.color,
-      required List<List<Component>> components,
+      required Component? component,
       this.transformer,
-      this.debug = false})
-      : _components = components {
+      this.debug = false}) {
     this.onResize = onResize;
+    _updateComponents(component);
   }
 
   set onResize(ValueChanged<Size>? value) {
@@ -123,14 +127,26 @@ class GameWidgetRenderObject extends RenderBox {
       {required ValueChanged<Size>? onResize,
       required Color color,
       required CanvasTransformer? transformer,
-      required List<List<Component>> components,
+      required Component? component,
       required bool debug}) {
     _onResize = onResize;
     this.color = color;
     this.transformer = transformer;
-    _components = components;
+    _updateComponents(component);
     this.debug = debug;
     markNeedsPaint();
+  }
+
+  void _updateComponents(Component? component) {
+    if(_component != component) {
+      if(_component != null) {
+        _ctx.unregisterComponent(_component!);
+      }
+    }
+    _component = component;
+    if(_component != null) {
+      _ctx.registerComponent(_component!);
+    }
   }
 
   @override
@@ -161,11 +177,7 @@ class GameWidgetRenderObject extends RenderBox {
     context.canvas.translate(offset.dx, offset.dy);
     if (transformer != null) transformer!(context.canvas, _oldSize);
     context.canvas.drawColor(color, BlendMode.src);
-    for (final layer in _components) {
-      for (final component in layer) {
-        component.render(context.canvas);
-      }
-    }
+    _component?.render(context.canvas);
     context.canvas.restore();
     if (debug) {
       debugPrint('${DateTime.now()} => painting took ${clock.elapsed}');
@@ -174,36 +186,29 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void handleEvent(PointerEvent event, covariant HitTestEntry entry) {
-    for (final layer in _components) {
-      for (final component in layer) {
-        component.handlePointerEvent(event);
-      }
+    for (final handler in _ctx._pointerEventHandlers) {
+      handler.handlePointerEvent(event);
     }
   }
+
+  final _ctx = ComponentContext();
 
   @override
   bool hitTestSelf(Offset position) => true;
 
   late final _ticker = Ticker(_tick);
 
-  TickCtx? _ctx, otherCtx;
+  final TickContext _tickCtx = TickContext();
 
   void _tick(Duration elapsed) {
     final clock = Stopwatch()..start();
-    _ctx ??=
-        TickCtx(timestamp: elapsed, dt: const Duration(), canvasSize: _oldSize);
-    _ctx!.nextTick(elapsed, _oldSize);
+    _tickCtx.nextTick(elapsed);
 
-    for (final layer in _components) {
-      for (final component in layer) {
-        component.tick(_ctx!);
-      }
+    for(final handler in _ctx._tickHandlers) {
+      handler.tick(_tickCtx);
     }
-    if (_ctx!.needsRender) {
+    if (_ctx._needsRerender) {
       markNeedsPaint();
-    }
-    for (final object in _ctx!.detached) {
-      object.onDetach();
     }
     if (debug) {
       debugPrint('${DateTime.now()} => ticking took ${clock.elapsed}');
@@ -228,6 +233,7 @@ class GameWidgetRenderObject extends RenderBox {
   @override
   void dispose() {
     _ticker.stop();
+
     super.dispose();
   }
 }
@@ -239,12 +245,12 @@ void originToCenter(Canvas canvas, Size size) {
   canvas.scale(1, -1);
 }
 
-CanvasTransformer originToCenterWith({Offset? scale, Offset? translate}) {
+CanvasTransformer originToCenterWith({P? scale, P? translate}) {
   return (Canvas canvas, Size size) {
     canvas.translate(size.width / 2, size.height / 2);
-    canvas.scale(scale?.dx ?? 1, -1 * (scale?.dy ?? 1));
     if (translate != null) {
-      canvas.translate(-translate.dx, -translate.dy);
+      canvas.translate(-translate.x, -translate.y);
     }
+    canvas.scale(scale?.x ?? 1, -1 * (scale?.y ?? 1));
   };
 }

@@ -1,11 +1,13 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
 
-class ScaledImage with BlockPointerMixin implements Component, FlexChild {
-  late ui.Image _image;
+class ScaledImage implements Component, PositionedComponent {
   var _offset = const Offset(0, 0);
+  late ui.Image _image;
   double _scale = 1;
+  num? _refScale;
 
   ScaledImage(
     this._image, {
@@ -14,7 +16,7 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
     double opacity = 1,
     num? refScale,
     num? toScale,
-  }) {
+  }): _offset = offset, _scale = scale, _refScale = refScale {
     set(
         offset: offset,
         scale: scale,
@@ -29,24 +31,10 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
   late Rect _dest = Rect.fromLTWH(_offset.dx, _offset.dy,
       _image.width.toDouble() * _scale, _image.height.toDouble() * _scale);
 
-  final _paint = Paint()
-    ..isAntiAlias = true
-    ..filterQuality = FilterQuality.high;
-
   @override
   void render(Canvas canvas) {
     canvas.drawImageRect(_image, _src, _dest, _paint);
   }
-
-  @override
-  void tick(TickCtx ctx) {
-    if (_dirty) {
-      _dirty = false;
-      ctx.shouldRender();
-    }
-  }
-
-  bool _dirty = true;
 
   void _update() {
     _src =
@@ -62,17 +50,6 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
   }
 
   @override
-  Size get size => Size(_image.width * _scale, _image.height * _scale);
-
-  @override
-  Offset get offset => _offset;
-  set offset(Offset value) {
-    if (_offset == value) return;
-    _offset = value;
-    _update();
-  }
-
-  @override
   void set(
       {ui.Image? image,
       Offset? offset,
@@ -83,6 +60,10 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
     bool needsUpdate = false;
     if (image != null && image != _image) {
       _image = image;
+      needsUpdate = true;
+    }
+    if (opacity != null && opacity != this.opacity) {
+      _paint.color = _paint.color.withValues(alpha: opacity);
       needsUpdate = true;
     }
     if (offset != null && offset != _offset) {
@@ -101,15 +82,27 @@ class ScaledImage with BlockPointerMixin implements Component, FlexChild {
       _scale = scale;
       needsUpdate = true;
     }
-    if (opacity != null && opacity != this.opacity) {
-      _paint.color = _paint.color.withValues(alpha: opacity);
-      _dirty = true;
-    }
     if (needsUpdate) {
       _update();
-      _dirty = true;
+      _ctx?.requestRender(this);
     }
   }
 
+  @override
+  Offset get offset => _offset;
+
+  @override
+  Size get size => Size(_image.width * _scale, _image.height * _scale);
+
+  final _paint = Paint()
+    ..isAntiAlias = true
+    ..filterQuality = FilterQuality.high;
   double get opacity => _paint.color.a;
+
+  ComponentContext? _ctx;
+
+  @override
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
+  }
 }

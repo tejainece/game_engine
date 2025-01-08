@@ -1,104 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:vector_path/vector_path.dart';
 
-class RectComponent
-    with BlockPointerMixin
-    implements Component, FlexChild, DimensionedComponent {
-  Offset _offset;
-  Size _size;
-  BorderPainter? _border;
+class RectangleComponent extends Component
+    implements ShapeComponent, SizedPositionedComponent {
+  Offset _offset = Offset.zero;
+  R _rect;
+  Stroke? _stroke;
+  Fill? _fill;
+  Paint? _fillPaint;
+  Paint? _strokePaint;
 
-  RectComponent(
-      {Color color = Colors.transparent,
-      Size size = Size.zero,
-      Offset offset = Offset.zero,
-      BorderPainter? border})
-      : _size = size,
-        _offset = offset,
-        _border = border,
-        _paint = Paint()..color = color;
+  late Path _path;
 
-  late final Paint _paint;
-
-  double get opacity => _paint.color.a;
-
-  set opacity(double value) {
-    if (opacity == value) return;
-    _paint.color = _paint.color.withValues(alpha: value);
-    _dirty = true;
-  }
-
-  Color get color => _paint.color;
-
-  set color(Color value) {
-    if (color == value) return;
-    _paint.color = value;
-    _dirty = true;
-  }
-
-  @override
-  Size get size => _size;
-
-  set size(Size value) {
-    if (value == _size) return;
-    _size = value;
-    _dirty = true;
-  }
-
-  @override
-  Offset get offset => _offset;
-
-  set offset(Offset value) {
-    if (value == _offset) return;
-    _offset = value;
-    _dirty = true;
-  }
-
-  bool _dirty = true;
-
-  @override
-  void set(
-      {Offset? offset,
-      Size? size,
-      Color? color,
-      double? opacity,
-      BorderPainter? border}) {
-    if (offset != null && offset != _offset) {
-      _offset = offset;
-      _dirty = true;
-    }
-    if (size != null && size != _size) {
-      _size = size;
-      _dirty = true;
-    }
-    if (color != null) {
-      this.color = color;
-      _dirty = true;
-    }
-    if (opacity != null) {
-      this.opacity = opacity;
-      _dirty = true;
-    }
-    if (border != null) {
-      _border = border;
-      _dirty = true;
-    }
-  }
-
-  @override
-  void tick(TickCtx ctx) {
-    if (_dirty) {
-      ctx.shouldRender();
-      _dirty = false;
-    }
+  RectangleComponent(this._rect,
+      {Offset offset = Offset.zero, Stroke? stroke, Fill? fill = const Fill()})
+      : _offset = offset,
+        _stroke = stroke,
+        _fill = fill {
+    _strokePaint = _stroke?.paint;
+    _fillPaint = _fill?.paint;
+    _path = _makePath();
   }
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRect(offset & size, _paint);
-
-    if (_border != null) {
-      canvas.drawRect(offset & size, _border!.paint);
+    canvas.save();
+    canvas.translate(_offset.dx, _offset.dy);
+    try {
+      _transform = Affine2d.fromMatrix4Cols(canvas.getTransform());
+      if (_fillPaint != null) {
+        canvas.drawPath(_path, _fillPaint!);
+      }
+      if (_strokePaint != null) {
+        canvas.drawPath(_path, _strokePaint!);
+      }
+    } finally {
+      canvas.restore();
     }
   }
+
+  Path _makePath() {
+    return Path()
+      ..addRect(
+          Rect.fromLTWH(_rect.left, _rect.top, _rect.width, _rect.height));
+  }
+
+  @override
+  void set(
+      {R? rectangle,
+      Offset? offset,
+      Size? size,
+      Argument<Stroke>? stroke,
+      Argument<Fill>? fill}) {
+    bool needsUpdate = false;
+    if (rectangle != null && rectangle != _rect) {
+      _rect = rectangle;
+      _path = _makePath();
+      needsUpdate = true;
+    } else if (size != null && _rect != R(0, 0, size.width, size.height)) {
+      _rect = R(0, 0, size.width, size.height);
+      _path = _makePath();
+      needsUpdate = true;
+    }
+    if (offset != null && offset != _offset) {
+      _offset = offset;
+      needsUpdate = true;
+    }
+    if (stroke != null && stroke.value != _stroke) {
+      _stroke = stroke.value;
+      _strokePaint = _stroke?.paint;
+      needsUpdate = true;
+    }
+    if (fill != null && fill.value != _fill) {
+      _fill = fill.value;
+      _fillPaint = _fill?.paint;
+      needsUpdate = true;
+    }
+    if (needsUpdate) {
+      _ctx?.requestRender(this);
+    }
+  }
+
+  @override
+  bool hitTest(Offset point) {
+    final p = P(point.dx, point.dy).transform(_transform);
+    return _rect.containsPoint(P(p.x, p.y));
+  }
+
+  ComponentContext? _ctx;
+  Affine2d _transform = Affine2d();
+
+  @override
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
+  }
+
+  @override
+  Offset get offset => _offset + _rect.topLeft.o;
+
+  @override
+  Size get size => Size(_rect.width, _rect.height);
 }

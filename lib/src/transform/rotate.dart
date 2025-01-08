@@ -1,79 +1,71 @@
 import 'dart:ui';
-import 'package:flutter/gestures.dart';
+
 import 'package:game_engine/game_engine.dart';
 
-class Rotate implements Component {
-  DimensionedComponent? child;
+class Rotate implements Component, NeedsDetach {
+  SizedPositionedComponent? _child;
   Offset _offset = Offset.zero;
   double _angle = 0;
-  Offset _center = Offset.zero;
 
   Rotate(
-      {required this.child,
-      double angleDegreeACW = 0,
-      Offset offset = Offset.zero,
-      Offset center = Offset.zero});
-
-  @override
-  void handlePointerEvent(PointerEvent event) {
-    child?.handlePointerEvent(event);
-  }
-
-  Offset _anchor = Offset.zero;
+      {SizedPositionedComponent? child,
+      double angle = 0,
+      Offset offset = Offset.zero})
+      : _offset = offset,
+        _angle = angle,
+        _child = child;
 
   @override
   void render(Canvas canvas) {
-    // TODO print('rotate render $_offset ${child?.offset}');
-    // Offset translation = _offset + _anchor;
+    if (_child == null) return;
+
     Offset translation = _offset;
 
     canvas.save();
     canvas.translate(translation.dx, translation.dy);
     canvas.rotate(_angle);
-    canvas.translate(-translation.dx, -translation.dy);
-    child?.render(canvas);
+    // canvas.translate(-translation.dx, -translation.dy);
+    try {
+      _child!.render(canvas);
+    } finally {
+      canvas.restore();
+    }
+  }
 
-    canvas.restore();
+  void set(
+      {double? angle, Offset? offset, Argument<SizedPositionedComponent>? child}) {
+    bool dirty = false;
+    if (child != null && _child != child.value) {
+      _child = child.value;
+      dirty = true;
+    }
+    if (offset != null && offset != _offset) {
+      _offset = offset;
+      dirty = true;
+    }
+    if (angle != null && angle != _angle) {
+      _angle = angle;
+      dirty = true;
+    }
+    if (dirty) {
+      _ctx?.requestRender(this);
+    }
+  }
+
+  ComponentContext? _ctx;
+
+  @override
+  void onAttach(ComponentContext ctx) {
+    _ctx = ctx;
+    if (_child != null) {
+      _ctx?.registerComponent(_child!);
+    }
   }
 
   @override
-  void tick(TickCtx ctx) {
-    if (_dirty) {
-      _dirty = false;
-      ctx.shouldRender();
-    }
-
-    child?.tick(ctx);
-  }
-
-  bool _dirty = true;
-
-  void set(
-      {double? angleDegree,
-      Offset? offset,
-      Offset? center,
-      NullableValue<DimensionedComponent>? child}) {
-    if (child != null) {
-      this.child = child.value;
-    }
-    bool anchorChanged = false;
-    if (offset != null && offset != _offset) {
-      _offset = offset;
-      _dirty = true;
-      anchorChanged = true;
-    }
-    if (center != null && center != _center) {
-      _center = center;
-      _dirty = true;
-      anchorChanged = true;
-    }
-    this.child?.set(offset: _offset);
-    if (anchorChanged) {
-      _anchor = _offset + _center;
-    }
-    if (angleDegree != null && angleDegree != _angle) {
-      _angle = angleDegree;
-      _dirty = true;
+  void onDetach(ComponentContext ctx) {
+    if (_child != null) {
+      ctx.unregisterComponent(_child!);
     }
   }
 }
