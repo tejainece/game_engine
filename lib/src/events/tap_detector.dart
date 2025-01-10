@@ -3,20 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class TapDetector {
+  dynamic debug;
   _TapTracker? _first, _second;
 
   ValueChanged<ClickEvent>? onTap;
   ValueChanged<ClickEvent>? onLongPress;
   ValueChanged? onDoubleTap;
 
-  TapDetector({this.onTap, this.onLongPress, this.onDoubleTap});
+  TapDetector({this.onTap, this.onLongPress, this.onDoubleTap, this.debug});
 
   void handlePointerEvent(PointerEvent event) {
-    // final point = event.localPosition;
-
-    // TODO detect hover
-    // print('event: ${event.runtimeType}');
-
     if (event is PointerDownEvent) {
       _handleDown(event);
       return;
@@ -182,4 +178,6 @@ class ClickEvent {
   int get buttons => down.buttons;
 
   PointerDeviceKind get kind => down.kind;
+
+  int get pointer => down.pointer;
 }

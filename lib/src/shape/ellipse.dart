@@ -3,8 +3,8 @@ import 'package:game_engine/game_engine.dart';
 import 'package:vector_path/vector_path.dart';
 
 class EllipseComponent extends Component implements ShapeComponent {
-  Offset _offset;
   Ellipse _ellipse;
+  Offset _offset;
   Stroke? _stroke;
   Fill? _fill;
   Paint? _fillPaint;
@@ -57,13 +57,13 @@ class EllipseComponent extends Component implements ShapeComponent {
 
   @override
   void set(
-      {Ellipse? ellipse,
+      {Ellipse? circle,
       Argument<Stroke>? stroke,
       Argument<Fill>? fill,
       Offset? offset}) {
     bool needsUpdate = false;
-    if (ellipse != null && ellipse != _ellipse) {
-      _ellipse = ellipse;
+    if (circle != null && circle != _ellipse) {
+      _ellipse = circle;
       _arc1 = _makeArc(0, 0.5);
       _arc2 = _makeArc(0.5, 1);
       needsUpdate = true;

@@ -14,6 +14,8 @@ class GameWidget extends StatefulWidget {
   final Component? component;
   final bool debug;
 
+  final ValueChanged<ClickEvent>? onTap;
+
   // TODO onPanStart
   final ValueChanged<PanData>? onPan;
 
@@ -30,6 +32,7 @@ class GameWidget extends StatefulWidget {
       this.onResize,
       this.transformer,
       this.debug = false,
+      this.onTap,
       this.onPan,
       this.onScale});
 
@@ -59,6 +62,7 @@ class _GameWidgetState extends State<GameWidget> {
         onResize: widget.onResize,
         transformer: widget.transformer,
         debug: widget.debug,
+        onTap: widget.onTap,
       ),
     );
   }
@@ -70,6 +74,7 @@ class _GameWidget extends LeafRenderObjectWidget {
   final CanvasTransformer? transformer;
   final Component? component;
   final bool debug;
+  final ValueChanged<ClickEvent>? onTap;
 
   const _GameWidget(
       {Key? key,
@@ -77,7 +82,8 @@ class _GameWidget extends LeafRenderObjectWidget {
       this.color = Colors.black,
       this.transformer,
       required this.component,
-      this.debug = false})
+      this.debug = false,
+      this.onTap})
       : super(key: key);
 
   @override
@@ -97,7 +103,8 @@ class _GameWidget extends LeafRenderObjectWidget {
         color: color,
         transformer: transformer,
         component: component,
-        debug: debug);
+        debug: debug,
+        onTap: onTap);
   }
 }
 
@@ -108,13 +115,15 @@ class GameWidgetRenderObject extends RenderBox {
   Component? _component;
   bool debug;
   CanvasTransformer? transformer;
+  ValueChanged<ClickEvent>? onTap;
 
   GameWidgetRenderObject(
       {ValueChanged<Size>? onResize,
       required this.color,
       required Component? component,
       this.transformer,
-      this.debug = false}) {
+      this.debug = false,
+      this.onTap}) {
     this.onResize = onResize;
     _updateComponents(component);
   }
@@ -131,12 +140,14 @@ class GameWidgetRenderObject extends RenderBox {
       required Color color,
       required CanvasTransformer? transformer,
       required Component? component,
-      required bool debug}) {
+      required bool debug,
+      required ValueChanged<ClickEvent>? onTap}) {
     _onResize = onResize;
     this.color = color;
     this.transformer = transformer;
     _updateComponents(component);
     this.debug = debug;
+    this.onTap = onTap;
     markNeedsPaint();
   }
 
@@ -192,7 +203,14 @@ class GameWidgetRenderObject extends RenderBox {
     for (final handler in _ctx._pointerEventHandlers) {
       handler.handlePointerEvent(event);
     }
+    _tapDetector.handlePointerEvent(event);
   }
+
+  late final _tapDetector = TapDetector(
+    onTap: (value) {
+      onTap?.call(value);
+    },
+  );
 
   final _ctx = ComponentContext();
 
