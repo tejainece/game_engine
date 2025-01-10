@@ -13,8 +13,15 @@ class GameWidget extends StatefulWidget {
   final CanvasTransformer? transformer;
   final Component? component;
   final bool debug;
+
+  // TODO onPanStart
   final ValueChanged<PanData>? onPan;
+
+  // TODO onPanEnd
+  // TODO onScaleStart
   final ValueChanged<ScaleData>? onScale;
+
+  // TODO onScaleEnd
 
   const GameWidget(
       {super.key,
@@ -42,21 +49,17 @@ class _GameWidgetState extends State<GameWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final child = _GameWidget(
-      component: widget.component,
-      color: widget.color,
-      onResize: widget.onResize,
-      transformer: widget.transformer,
-      debug: widget.debug,
-    );
-    if (widget.onPan == null && widget.onScale == null) {
-      return child;
-    }
     return GestureDetector(
       onScaleStart: _detector.scaleStart,
       onScaleUpdate: _detector.scaleUpdate,
       onScaleEnd: _detector.scaleEnd,
-      child: child,
+      child: _GameWidget(
+        component: widget.component,
+        color: widget.color,
+        onResize: widget.onResize,
+        transformer: widget.transformer,
+        debug: widget.debug,
+      ),
     );
   }
 }
@@ -138,13 +141,13 @@ class GameWidgetRenderObject extends RenderBox {
   }
 
   void _updateComponents(Component? component) {
-    if(_component != component) {
-      if(_component != null) {
+    if (_component != component) {
+      if (_component != null) {
         _ctx.unregisterComponent(_component!);
       }
     }
     _component = component;
-    if(_component != null) {
+    if (_component != null) {
       _ctx.registerComponent(_component!);
     }
   }
@@ -204,7 +207,7 @@ class GameWidgetRenderObject extends RenderBox {
     final clock = Stopwatch()..start();
     _tickCtx.nextTick(elapsed);
 
-    for(final handler in _ctx._tickHandlers) {
+    for (final handler in _ctx._tickHandlers) {
       handler.tick(_tickCtx);
     }
     if (_ctx._needsRerender) {
@@ -240,17 +243,36 @@ class GameWidgetRenderObject extends RenderBox {
 
 typedef CanvasTransformer = void Function(Canvas canvas, Size size);
 
-void originToCenter(Canvas canvas, Size size) {
+void centeredYUp(Canvas canvas, Size size) {
   canvas.translate(size.width / 2, size.height / 2);
   canvas.scale(1, -1);
 }
 
-CanvasTransformer originToCenterWith({P? scale, P? translate}) {
+CanvasTransformer centeredYUpWith({P? scale, P? translate}) {
+  return (Canvas canvas, Size size) {
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(1, -1);
+    if (translate != null) {
+      canvas.translate(-translate.x, -translate.y);
+    }
+    if (scale != null) {
+      canvas.scale(scale.x, -1 * scale.y);
+    }
+  };
+}
+
+void centeredYDown(Canvas canvas, Size size) {
+  canvas.translate(size.width / 2, size.height / 2);
+}
+
+CanvasTransformer centeredYDownWith({P? scale, P? translate}) {
   return (Canvas canvas, Size size) {
     canvas.translate(size.width / 2, size.height / 2);
     if (translate != null) {
       canvas.translate(-translate.x, -translate.y);
     }
-    canvas.scale(scale?.x ?? 1, -1 * (scale?.y ?? 1));
+    if (scale != null) {
+      canvas.scale(scale.x, scale.y);
+    }
   };
 }

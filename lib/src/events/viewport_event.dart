@@ -19,6 +19,12 @@ class ScaleData {
       {required this.focalPoint, required this.scale, required this.rotation});
 }
 
+class TapData {
+  final Offset position;
+
+  TapData({required this.position});
+}
+
 class ViewportGestureDetector {
   final double threshold;
 
