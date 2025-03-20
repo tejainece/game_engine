@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:vector_path/vector_path.dart';
+import 'package:ramanujan/ramanujan.dart';
 
 extension PExt on P {
   Offset get o => Offset(x, y);

@@ -13,6 +13,8 @@ class SpriteComponent
   VoidCallback? onLoopOver;
   final Duration Function()? timeGiver;
 
+  dynamic debug;
+
   SpriteComponent(
       {Sprite? sprite,
       Offset offset = Offset.zero,
@@ -23,13 +25,13 @@ class SpriteComponent
       Size size = const Size(0, 0),
       this.timeGiver,
       this.onLoopOver,
-      ui.ImageFilter? imageFilter})
-      : _sprite = sprite,
-        _offset = offset,
+      ui.ImageFilter? imageFilter,
+      this.debug})
+      : _offset = offset,
         _size = size,
         _scale = scale,
         _anchor = anchor {
-    set(scaleWidth: scaleWidth, imageFilter: imageFilter);
+    set(sprite: sprite, scaleWidth: scaleWidth, imageFilter: imageFilter);
     this.opacity = opacity;
   }
 
@@ -64,18 +66,19 @@ class SpriteComponent
   set sprite(Sprite value) {
     if (value == _sprite) return;
     _sprite = value;
-    if (_sprite!.frames.isNotEmpty) {
-      _info = _Render.make(
-        index: 0,
-        frame: _sprite!.frames[0],
-        scale: _scale,
-        offset: _offset,
-        anchor: _anchor,
-        sprite: _sprite!,
-        size: _size,
-      );
-    } else {
-      _info = null;
+    _info = null;
+    if (_sprite != null) {
+      if (_sprite!.frames.isNotEmpty) {
+        _info = _Render.make(
+          index: 0,
+          frame: _sprite!.frames[0],
+          scale: _scale,
+          offset: _offset,
+          anchor: _anchor,
+          sprite: _sprite!,
+          size: _size,
+        );
+      }
     }
     _ctx?.requestRender(this);
   }
@@ -158,7 +161,7 @@ class SpriteComponent
       this.sprite = sprite;
       needsFrameUpdate = true;
     }
-    if (scaleWidth != null) {
+    if (scaleWidth != null && _sprite != null) {
       if (_sprite!.refScale == null) {
         throw Exception('cannot use scaleWidth when refScale is null');
       }
@@ -186,6 +189,14 @@ class SpriteComponent
 
   @override
   void tick(TickContext ctx) {
+    if (_sprite == null) {
+      if (_info != null) {
+        _info = null;
+        _ctx?.requestRender(this);
+      }
+      return;
+    }
+
     Duration dt = ctx.dt;
     if (timeGiver != null) {
       final now = timeGiver!();
@@ -196,27 +207,56 @@ class SpriteComponent
 
     bool needsRender = false;
 
-    if (_sprite!.frames.length <= 1) {
-      // Do nothing
-    } else if (!_paused) {
-      _elapsed += dt;
-      final frameInterval = _info!.frame.interval ?? sprite.interval;
-      if (_elapsed >= frameInterval) {
-        if (_info!.index == sprite.frames.length - 1) {
-          onLoopOver?.call();
-        }
-        int index = (_info!.index + 1) % sprite.frames.length;
+    if (_sprite!.frames.isEmpty) {
+      if (_info != null) {
+        _info = null;
+        needsRender = true;
+      }
+    } else if (_sprite!.frames.length == 1) {
+      if (_info == null) {
         _info = _Render.make(
-          index: index,
-          frame: _sprite!.frames[index],
+          index: 0,
+          frame: _sprite!.frames[0],
           scale: _scale,
           offset: _offset,
           size: _size,
           anchor: _anchor,
           sprite: _sprite!,
         );
-        _elapsed = const Duration();
         needsRender = true;
+      }
+    } else if (!_paused) {
+      if (_info == null) {
+        _elapsed = const Duration();
+        _info = _Render.make(
+          index: 0,
+          frame: _sprite!.frames[0],
+          scale: _scale,
+          offset: _offset,
+          size: _size,
+          anchor: _anchor,
+          sprite: _sprite!,
+        );
+      } else {
+        _elapsed += dt;
+        final frameInterval = _info!.frame.interval ?? sprite.interval;
+        if (_elapsed >= frameInterval) {
+          if (_info!.index == sprite.frames.length - 1) {
+            onLoopOver?.call();
+          }
+          int index = (_info!.index + 1) % sprite.frames.length;
+          _info = _Render.make(
+            index: index,
+            frame: _sprite!.frames[index],
+            scale: _scale,
+            offset: _offset,
+            size: _size,
+            anchor: _anchor,
+            sprite: _sprite!,
+          );
+          _elapsed = const Duration();
+          needsRender = true;
+        }
       }
     }
 

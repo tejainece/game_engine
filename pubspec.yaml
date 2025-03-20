@@ -15,8 +15,8 @@ dependencies:
   flutter_sprite: #^3.0.5
     path: ../flutter_sprite
   collection: ^1.14.12
-  vector_path:
-    path: ../../vector/vector_path
+  ramanujan:
+    path: ../../vector/ramanujan
 
 dev_dependencies:
   flutter_test:

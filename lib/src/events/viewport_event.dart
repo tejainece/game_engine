@@ -11,12 +11,20 @@ class PanData {
 class ScaleData {
   final Offset focalPoint;
 
+  final double previousScale;
+
   final double scale;
+
+  final double previousRotation;
 
   final double rotation;
 
   ScaleData(
-      {required this.focalPoint, required this.scale, required this.rotation});
+      {required this.focalPoint,
+      required this.previousScale,
+      required this.scale,
+      required this.previousRotation,
+      required this.rotation});
 }
 
 class ViewportGestureDetector {
@@ -94,12 +102,23 @@ class _PinchPanTracker {
 class _PinchScaleTracker {
   final ScaleStartDetails start;
 
-  _PinchScaleTracker(this.start);
+  _PinchScaleTracker(this.start)
+      : _previousScale = 1.0,
+        _previousRotation = 0;
+
+  double _previousScale;
+
+  double _previousRotation;
 
   ScaleData update(ScaleUpdateDetails details) {
-    return ScaleData(
+    final ret = ScaleData(
         focalPoint: details.focalPoint,
+        previousScale: 1/_previousScale,
         scale: details.scale,
+        previousRotation: -_previousRotation, // TODO clamping
         rotation: details.rotation);
+    _previousScale = details.scale;
+    _previousRotation = details.rotation;
+    return ret;
   }
 }

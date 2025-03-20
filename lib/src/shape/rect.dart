@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:vector_path/vector_path.dart';
+import 'package:ramanujan/ramanujan.dart';
 
 class RectangleComponent extends Component
     implements ShapeComponent, SizedPositionedComponent {
@@ -14,7 +14,7 @@ class RectangleComponent extends Component
   late Path _path;
 
   RectangleComponent(this._rect,
-      {Offset offset = Offset.zero, Stroke? stroke, Fill? fill = const Fill()})
+      {Offset offset = Offset.zero, Stroke? stroke, Fill? fill})
       : _offset = offset,
         _stroke = stroke,
         _fill = fill {
