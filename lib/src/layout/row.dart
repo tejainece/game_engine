@@ -26,13 +26,19 @@ abstract class OnResizeComponent implements SizedPositionedComponent {
   void deregisterOnResizeListener(Object key);
 }
 
-class RowComponent implements Component, PositionedComponent, SizedPositionedComponent, NeedsDetach {
+class RowComponent
+    implements
+        Component,
+        PositionedComponent,
+        SizedPositionedComponent,
+        NeedsDetach {
   SizedPositionedComponent? _bg;
   List<_Child> _children = [];
   Offset _offset = const Offset(0, 0);
   Size _size = const Size(0, 0);
   var _crossAxisAlign = CrossAxisAlignment.start;
   var _align = MainAxisAlignment.start;
+  EdgeInsets _padding = const EdgeInsets.all(0);
 
   @override
   Size get size => _size;
@@ -40,14 +46,15 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
   @override
   Offset get offset => _offset;
 
-  RowComponent(
-      {required List<PositionedComponent> children,
-      SizedPositionedComponent? bg,
-      Offset offset = const Offset(0, 0),
-      Size size = const Size(0, 0),
-      CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
-      MainAxisAlignment align = MainAxisAlignment.start})
-      : _offset = offset,
+  RowComponent({
+    required List<PositionedComponent> children,
+    SizedPositionedComponent? bg,
+    Offset offset = const Offset(0, 0),
+    Size size = const Size(0, 0),
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
+    MainAxisAlignment align = MainAxisAlignment.start,
+    EdgeInsets? padding,
+  })  : _offset = offset,
         _size = size,
         _bg = bg,
         _crossAxisAlign = crossAxisAlignment,
@@ -72,6 +79,7 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
       CrossAxisAlignment? crossAxisAlignment,
       MainAxisAlignment? align,
       SizedPositionedComponent? bg,
+      EdgeInsets? padding,
       List<PositionedComponent>? children}) {
     bool needsLayout = false;
     bool dimChanged = false;
@@ -94,6 +102,10 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
     }
     if (dimChanged) {
       _bg?.set(offset: _offset, size: _size);
+    }
+    if (padding != null && padding != _padding) {
+      _padding = padding;
+      needsLayout = true;
     }
     if (crossAxisAlignment != null && crossAxisAlignment != _crossAxisAlign) {
       _crossAxisAlign = crossAxisAlignment;
@@ -118,7 +130,7 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
   void _updateChildren(List<PositionedComponent> children) {
     final newChildren = <_Child>[];
     final childSet = <PositionedComponent, _Child>{};
-    for(final child in children) {
+    for (final child in children) {
       _Child? existing = _childSet[child];
       if (existing == null) {
         existing = _Child(component: child);
@@ -128,7 +140,7 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
       childSet[child] = existing;
       newChildren.add(existing);
     }
-    for(final existing in _childSet.values) {
+    for (final existing in _childSet.values) {
       if (!childSet.containsKey(existing.component)) {
         _ctx?.unregisterComponent(existing.component);
       }
@@ -137,7 +149,8 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
     _children = newChildren;
   }
 
-  List<PositionedComponent> get children => _children.map((e) => e.component).toList();
+  List<PositionedComponent> get children =>
+      _children.map((e) => e.component).toList();
 
   bool _compareChildren(Iterable<PositionedComponent> children) {
     if (children.length != _children.length) {
@@ -154,15 +167,17 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
   }
 
   void _layout() {
+    Size size = _padding.deflateSize(_size);
+    Offset _offset = this._offset + _padding.topLeft;
     // TODO implement wrapping
     if (_align == MainAxisAlignment.start) {
       double offset = _offset.dx;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
@@ -173,13 +188,13 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
             'row ${child.component.runtimeType} ${child.component.offset} ${child.component.size}');*/ // TODO remove
       }
     } else if (_align == MainAxisAlignment.end) {
-      double offset = _offset.dx + _size.width;
+      double offset = _offset.dx + size.width;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
@@ -191,13 +206,13 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
     } else if (_align == MainAxisAlignment.center) {
       double totalWidth =
           _children.fold(0.0, (p, e) => p + e.component.size.width);
-      var offset = _offset.dx + (_size.width - totalWidth) / 2;
+      var offset = _offset.dx + (size.width - totalWidth) / 2;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
@@ -207,15 +222,15 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
       }
     } else if (_align == MainAxisAlignment.spaceBetween) {
       final totWid = _children.fold(0.0, (p, e) => p + e.component.size.width);
-      final space = (_size.width - totWid) / (_children.length - 1);
+      final space = (size.width - totWid) / (_children.length - 1);
 
       double dx = _offset.dx;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
@@ -225,15 +240,15 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
       }
     } else if (_align == MainAxisAlignment.spaceAround) {
       final totWid = _children.fold(0.0, (p, e) => p + e.component.size.width);
-      final space = (_size.width - totWid) / (_children.length * 2);
+      final space = (size.width - totWid) / (_children.length * 2);
 
       double offset = _offset.dx + space;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
@@ -243,15 +258,15 @@ class RowComponent implements Component, PositionedComponent, SizedPositionedCom
       }
     } else if (_align == MainAxisAlignment.spaceEvenly) {
       final totWid = _children.fold(0.0, (p, e) => p + e.component.size.width);
-      final space = (_size.width - totWid) / (_children.length + 1);
+      final space = (size.width - totWid) / (_children.length + 1);
 
       double dx = _offset.dx + space;
       for (final child in _children) {
         double dy = _offset.dy;
         if (_crossAxisAlign == CrossAxisAlignment.center) {
-          dy += (_size.height - child.component.size.height) / 2;
+          dy += (size.height - child.component.size.height) / 2;
         } else if (_crossAxisAlign == CrossAxisAlignment.end) {
-          dy += _size.height - child.component.size.height;
+          dy += size.height - child.component.size.height;
         } else if (_crossAxisAlign == CrossAxisAlignment.stretch) {
           // TODO
         }
