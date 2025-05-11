@@ -13,10 +13,12 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_sprite: #^3.0.5
-    path: ../flutter_sprite
+    #path: ../flutter_sprite
+    git: git@github.com:tejainece/flutter_sprite.git
   collection: ^1.14.12
   ramanujan:
-    path: ../../vector/ramanujan
+    #path: ../../vector/ramanujan
+    git: git@github.com:tejainece/ramanujan.git
 
 dev_dependencies:
   flutter_test:
