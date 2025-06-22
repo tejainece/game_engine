@@ -228,7 +228,7 @@ class GameWidgetRenderObject extends RenderBox {
     for (final handler in _ctx._tickHandlers) {
       handler.tick(_tickCtx);
     }
-    if (_ctx._needsRerender) {
+    if (_ctx._needsRerender || _tickCtx.needsRender) {
       markNeedsPaint();
     }
     if (debug) {
