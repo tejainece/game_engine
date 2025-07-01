@@ -19,7 +19,7 @@ class ComponentContext {
     if (component is PointerEventHandler) {
       _pointerEventHandlers.add(component);
     }
-    if(component is NeedsTick) {
+    if (component is NeedsTick) {
       _tickHandlers.add(component);
     }
     // TODO register

@@ -225,7 +225,7 @@ class GameWidgetRenderObject extends RenderBox {
     final clock = Stopwatch()..start();
     _tickCtx.nextTick(elapsed);
 
-    for (final handler in _ctx._tickHandlers) {
+    for (final handler in _ctx._tickHandlers.toList()) {
       handler.tick(_tickCtx);
     }
     if (_ctx._needsRerender || _tickCtx.needsRender) {
