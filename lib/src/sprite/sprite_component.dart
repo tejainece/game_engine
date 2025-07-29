@@ -15,22 +15,22 @@ class SpriteComponent
 
   dynamic debug;
 
-  SpriteComponent(
-      {Sprite? sprite,
-      Offset offset = Offset.zero,
-      Offset anchor = Offset.zero,
-      double scale = 1,
-      num? scaleWidth,
-      double opacity = 1,
-      Size size = const Size(0, 0),
-      this.timeGiver,
-      this.onLoopOver,
-      ui.ImageFilter? imageFilter,
-      this.debug})
-      : _offset = offset,
-        _size = size,
-        _scale = scale,
-        _anchor = anchor {
+  SpriteComponent({
+    Sprite? sprite,
+    Offset offset = Offset.zero,
+    Offset anchor = Offset.zero,
+    double scale = 1,
+    num? scaleWidth,
+    double opacity = 1,
+    Size size = const Size(0, 0),
+    this.timeGiver,
+    this.onLoopOver,
+    ui.ImageFilter? imageFilter,
+    this.debug,
+  }) : _offset = offset,
+       _size = size,
+       _scale = scale,
+       _anchor = anchor {
     set(sprite: sprite, scaleWidth: scaleWidth, imageFilter: imageFilter);
     this.opacity = opacity;
   }
@@ -132,14 +132,15 @@ class SpriteComponent
   }
 
   @override
-  void set(
-      {Sprite? sprite,
-      double? scale,
-      num? scaleWidth,
-      Offset? offset,
-      Offset? anchor,
-      Size? size,
-      ui.ImageFilter? imageFilter}) {
+  void set({
+    Sprite? sprite,
+    double? scale,
+    num? scaleWidth,
+    Offset? offset,
+    Offset? anchor,
+    Size? size,
+    ui.ImageFilter? imageFilter,
+  }) {
     bool needsFrameUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;
