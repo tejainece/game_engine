@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class RectangleComponent extends Component
@@ -13,11 +14,14 @@ class RectangleComponent extends Component
 
   late Path _path;
 
-  RectangleComponent(this._rect,
-      {Offset offset = Offset.zero, Stroke? stroke, Fill? fill})
-      : _offset = offset,
-        _stroke = stroke,
-        _fill = fill {
+  RectangleComponent(
+    this._rect, {
+    Offset offset = Offset.zero,
+    Stroke? stroke,
+    Fill? fill,
+  }) : _offset = offset,
+       _stroke = stroke,
+       _fill = fill {
     _strokePaint = _stroke?.paint;
     _fillPaint = _fill?.paint;
     _path = _makePath();
@@ -41,18 +45,19 @@ class RectangleComponent extends Component
   }
 
   Path _makePath() {
-    return Path()
-      ..addRect(
-          Rect.fromLTWH(_rect.left, _rect.top, _rect.width, _rect.height));
+    return Path()..addRect(
+      Rect.fromLTWH(_rect.left, _rect.top, _rect.width, _rect.height),
+    );
   }
 
   @override
-  void set(
-      {R? rectangle,
-      Offset? offset,
-      Size? size,
-      Argument<Stroke>? stroke,
-      Argument<Fill>? fill}) {
+  void set({
+    R? rectangle,
+    Offset? offset,
+    Size? size,
+    Optional<Stroke>? stroke,
+    Optional<Fill>? fill,
+  }) {
     bool needsUpdate = false;
     if (rectangle != null && rectangle != _rect) {
       _rect = rectangle;

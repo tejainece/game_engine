@@ -1,19 +1,20 @@
 import 'dart:ui';
 
 import 'package:game_engine/game_engine.dart';
+import 'package:optional/optional.dart';
 
 class Rotate implements Component, NeedsDetach {
   SizedPositionedComponent? _child;
   Offset _offset = Offset.zero;
   double _angle = 0;
 
-  Rotate(
-      {SizedPositionedComponent? child,
-      double angle = 0,
-      Offset offset = Offset.zero})
-      : _offset = offset,
-        _angle = angle,
-        _child = child;
+  Rotate({
+    SizedPositionedComponent? child,
+    double angle = 0,
+    Offset offset = Offset.zero,
+  }) : _offset = offset,
+       _angle = angle,
+       _child = child;
 
   @override
   void render(Canvas canvas) {
@@ -32,8 +33,11 @@ class Rotate implements Component, NeedsDetach {
     }
   }
 
-  void set(
-      {double? angle, Offset? offset, Argument<SizedPositionedComponent>? child}) {
+  void set({
+    double? angle,
+    Offset? offset,
+    Optional<SizedPositionedComponent>? child,
+  }) {
     bool dirty = false;
     if (child != null && _child != child.value) {
       _child = child.value;

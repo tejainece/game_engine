@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:optional/optional.dart';
 
-class HexComponent implements Component, SizedPositionedComponent, ShapeComponent {
+class HexComponent
+    implements Component, SizedPositionedComponent, ShapeComponent {
   late Offset _offset;
   late Size _size;
   Stroke? _stroke;
@@ -13,26 +15,27 @@ class HexComponent implements Component, SizedPositionedComponent, ShapeComponen
   // TODO do we need border paint
   Path? _borderPath;
 
-  HexComponent(
-      {Offset offset = const Offset(0, 0),
-      Size size = const Size(0, 0),
-      Stroke? stroke,
-      Fill? fill})
-      : _offset = offset,
-        _size = size,
-        _stroke = stroke,
-        _fill = fill {
+  HexComponent({
+    Offset offset = const Offset(0, 0),
+    Size size = const Size(0, 0),
+    Stroke? stroke,
+    Fill? fill,
+  }) : _offset = offset,
+       _size = size,
+       _stroke = stroke,
+       _fill = fill {
     _strokePaint = _stroke?.paint;
     _fillPaint = _fill?.paint;
     _update();
   }
 
   @override
-  void set(
-      {Offset? offset,
-      Size? size,
-      Argument<Stroke?>? stroke,
-      Argument<Fill?>? fill}) {
+  void set({
+    Offset? offset,
+    Size? size,
+    Optional<Stroke?>? stroke,
+    Optional<Fill?>? fill,
+  }) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {
       _offset = offset;

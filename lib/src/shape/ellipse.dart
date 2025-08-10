@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class EllipseComponent extends Component implements ShapeComponent {
@@ -12,9 +13,14 @@ class EllipseComponent extends Component implements ShapeComponent {
   late Path _arc1;
   late Path _arc2;
 
-  EllipseComponent(this._ellipse,
-      {Stroke? stroke = const Stroke(), Fill? fill, Offset offset = Offset.zero})
-      : _offset = offset, _stroke = stroke, _fill = fill {
+  EllipseComponent(
+    this._ellipse, {
+    Stroke? stroke = const Stroke(),
+    Fill? fill,
+    Offset offset = Offset.zero,
+  }) : _offset = offset,
+       _stroke = stroke,
+       _fill = fill {
     _strokePaint = _stroke?.paint;
     _fillPaint = _fill?.paint;
     _arc1 = _makeArc(0, 0.5);
@@ -39,11 +45,13 @@ class EllipseComponent extends Component implements ShapeComponent {
     final perimeter = _ellipse.perimeter;
     return Path()
       ..moveToOffset(_ellipse.lerp(start).o)
-      ..arcToPoint(_ellipse.lerp(end).o,
-          rotation: _ellipse.rotation.toDegree,
-          radius: _ellipse.radii.r,
-          clockwise: false,
-          largeArc: arcLength > perimeter / 2);
+      ..arcToPoint(
+        _ellipse.lerp(end).o,
+        rotation: _ellipse.rotation.toDegree,
+        radius: _ellipse.radii.r,
+        clockwise: false,
+        largeArc: arcLength > perimeter / 2,
+      );
   }
 
   void _drawArc(Canvas canvas, Path path) {
@@ -56,11 +64,12 @@ class EllipseComponent extends Component implements ShapeComponent {
   }
 
   @override
-  void set(
-      {Ellipse? circle,
-      Argument<Stroke>? stroke,
-      Argument<Fill>? fill,
-      Offset? offset}) {
+  void set({
+    Ellipse? circle,
+    Optional<Stroke>? stroke,
+    Optional<Fill>? fill,
+    Offset? offset,
+  }) {
     bool needsUpdate = false;
     if (circle != null && circle != _ellipse) {
       _ellipse = circle;

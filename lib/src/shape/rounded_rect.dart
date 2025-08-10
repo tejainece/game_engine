@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
+import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class RoundedRectangleComponent extends Component
@@ -14,15 +15,16 @@ class RoundedRectangleComponent extends Component
 
   late Path _path;
 
-  RoundedRectangleComponent(this._rect,
-      {Offset offset = Offset.zero,
-      Stroke? stroke,
-      Fill? fill,
-      double radius = 0})
-      : _offset = offset,
-        _stroke = stroke,
-        _fill = fill,
-        _radius = radius {
+  RoundedRectangleComponent(
+    this._rect, {
+    Offset offset = Offset.zero,
+    Stroke? stroke,
+    Fill? fill,
+    double radius = 0,
+  }) : _offset = offset,
+       _stroke = stroke,
+       _fill = fill,
+       _radius = radius {
     _strokePaint = _stroke?.paint;
     _fillPaint = _fill?.paint;
     _path = _makePath();
@@ -47,19 +49,24 @@ class RoundedRectangleComponent extends Component
 
   Path _makePath() {
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
+      ..addRRect(
+        RRect.fromRectAndRadius(
           Rect.fromLTWH(_rect.left, _rect.top, _rect.width, _rect.height),
-          Radius.circular(_radius)));
+          Radius.circular(_radius),
+        ),
+      );
     return path;
   }
 
   @override
-  void set(
-      {R? rectangle,
-      Offset? offset,
-      Size? size,
-      Argument<Stroke>? stroke,
-      Argument<Fill>? fill, double? radius}) {
+  void set({
+    R? rectangle,
+    Offset? offset,
+    Size? size,
+    Optional<Stroke>? stroke,
+    Optional<Fill>? fill,
+    double? radius,
+  }) {
     bool needsUpdate = false;
     if (rectangle != null && rectangle != _rect) {
       _rect = rectangle;
@@ -72,7 +79,7 @@ class RoundedRectangleComponent extends Component
       _radius = radius;
       needsUpdate = true;
     }
-    if(needsUpdate) {
+    if (needsUpdate) {
       _path = _makePath();
     }
     if (offset != null && offset != _offset) {

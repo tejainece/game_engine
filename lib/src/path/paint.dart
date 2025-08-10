@@ -11,21 +11,22 @@ class Stroke implements ToPaint {
 
   const Stroke.none() : this(color: Colors.transparent);
 
-  const Stroke(
-      {this.color = Colors.black,
-        this.strokeWidth = 1,
-        this.strokeCap = StrokeCap.butt,
-        this.strokeJoin = StrokeJoin.miter,
-        this.strokeMiterLimit = 4});
+  const Stroke({
+    this.color = Colors.black,
+    this.strokeWidth = 1,
+    this.strokeCap = StrokeCap.butt,
+    this.strokeJoin = StrokeJoin.miter,
+    this.strokeMiterLimit = 4,
+  });
 
   @override
   bool operator ==(other) =>
       other is Stroke &&
-          color == other.color &&
-          strokeWidth == other.strokeWidth &&
-          strokeCap == other.strokeCap &&
-          strokeJoin == other.strokeJoin &&
-          strokeMiterLimit == strokeMiterLimit;
+      color == other.color &&
+      strokeWidth == other.strokeWidth &&
+      strokeCap == other.strokeCap &&
+      strokeJoin == other.strokeJoin &&
+      strokeMiterLimit == strokeMiterLimit;
 
   @override
   int get hashCode =>
@@ -72,14 +73,4 @@ extension ToPaintExt on ToPaint {
     }
     throw UnsupportedError('Unsupported paint type $runtimeType');
   }
-}
-
-class Argument<T> {
-  final T? value;
-
-  const Argument(this.value);
-}
-
-extension ObjectArgumentExt<T> on T {
-  Argument<T> get asArg => Argument<T>(this);
 }
