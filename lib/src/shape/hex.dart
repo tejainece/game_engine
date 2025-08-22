@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 
 class HexComponent
     implements Component, SizedPositionedComponent, ShapeComponent {
@@ -33,8 +32,8 @@ class HexComponent
   void set({
     Offset? offset,
     Size? size,
-    Optional<Stroke?>? stroke,
-    Optional<Fill?>? fill,
+    Arg<Stroke?>? stroke,
+    Arg<Fill?>? fill,
   }) {
     bool needsUpdate = false;
     if (offset != null && offset != _offset) {

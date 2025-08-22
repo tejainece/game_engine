@@ -14,7 +14,6 @@ dependencies:
     sdk: flutter
   flutter_sprite: ^4.0.2
   collection: ^1.14.12
-  optional: ^6.1.0
   ramanujan:
     #path: ../../vector/ramanujan
     git: git@github.com:tejainece/ramanujan.git

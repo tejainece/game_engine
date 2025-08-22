@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class RectangleComponent extends Component
@@ -55,8 +54,8 @@ class RectangleComponent extends Component
     R? rectangle,
     Offset? offset,
     Size? size,
-    Optional<Stroke>? stroke,
-    Optional<Fill>? fill,
+    Arg<Stroke>? stroke,
+    Arg<Fill>? fill,
   }) {
     bool needsUpdate = false;
     if (rectangle != null && rectangle != _rect) {

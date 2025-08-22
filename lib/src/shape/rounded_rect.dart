@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class RoundedRectangleComponent extends Component
@@ -63,8 +62,8 @@ class RoundedRectangleComponent extends Component
     R? rectangle,
     Offset? offset,
     Size? size,
-    Optional<Stroke>? stroke,
-    Optional<Fill>? fill,
+    Arg<Stroke>? stroke,
+    Arg<Fill>? fill,
     double? radius,
   }) {
     bool needsUpdate = false;

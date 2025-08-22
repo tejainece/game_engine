@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class CircleComponent extends Component implements ShapeComponent {
@@ -65,8 +64,8 @@ class CircleComponent extends Component implements ShapeComponent {
   @override
   void set({
     Circle? circle,
-    Optional<Stroke>? stroke,
-    Optional<Fill>? fill,
+    Arg<Stroke>? stroke,
+    Arg<Fill>? fill,
     Offset? offset,
   }) {
     bool needsUpdate = false;

@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 
 class Rotate implements Component, NeedsDetach {
   SizedPositionedComponent? _child;
@@ -36,7 +35,7 @@ class Rotate implements Component, NeedsDetach {
   void set({
     double? angle,
     Offset? offset,
-    Optional<SizedPositionedComponent>? child,
+    Arg<SizedPositionedComponent>? child,
   }) {
     bool dirty = false;
     if (child != null && _child != child.value) {

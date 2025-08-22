@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:game_engine/game_engine.dart';
-import 'package:optional/optional.dart';
 import 'package:ramanujan/ramanujan.dart';
 
 class EllipseComponent extends Component implements ShapeComponent {
@@ -66,8 +65,8 @@ class EllipseComponent extends Component implements ShapeComponent {
   @override
   void set({
     Ellipse? circle,
-    Optional<Stroke>? stroke,
-    Optional<Fill>? fill,
+    Arg<Stroke>? stroke,
+    Arg<Fill>? fill,
     Offset? offset,
   }) {
     bool needsUpdate = false;
