@@ -54,11 +54,11 @@ class RowComponent
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
     MainAxisAlignment align = MainAxisAlignment.start,
     EdgeInsets? padding,
-  })  : _offset = offset,
-        _size = size,
-        _bg = bg,
-        _crossAxisAlign = crossAxisAlignment,
-        _align = align {
+  }) : _offset = offset,
+       _size = size,
+       _bg = bg,
+       _crossAxisAlign = crossAxisAlignment,
+       _align = align {
     _bg?.set(offset: offset, size: size);
     _updateChildren(children);
     _layout();
@@ -73,14 +73,15 @@ class RowComponent
   }
 
   @override
-  void set(
-      {Offset? offset,
-      Size? size,
-      CrossAxisAlignment? crossAxisAlignment,
-      MainAxisAlignment? align,
-      SizedPositionedComponent? bg,
-      EdgeInsets? padding,
-      List<PositionedComponent>? children}) {
+  void set({
+    Offset? offset,
+    Size? size,
+    CrossAxisAlignment? crossAxisAlignment,
+    MainAxisAlignment? align,
+    SizedPositionedComponent? bg,
+    EdgeInsets? padding,
+    List<PositionedComponent>? children,
+  }) {
     bool needsLayout = false;
     bool dimChanged = false;
     if (bg != null && bg != _bg) {
@@ -204,8 +205,10 @@ class RowComponent
         offset = tmp;
       }
     } else if (_align == MainAxisAlignment.center) {
-      double totalWidth =
-          _children.fold(0.0, (p, e) => p + e.component.size.width);
+      double totalWidth = _children.fold(
+        0.0,
+        (p, e) => p + e.component.size.width,
+      );
       var offset = _offset.dx + (size.width - totalWidth) / 2;
       for (final child in _children) {
         double dy = _offset.dy;
@@ -304,7 +307,6 @@ class RowComponent
 
 class _Child {
   final PositionedComponent component;
-  Size? size;
 
-  _Child({required this.component, this.size});
+  _Child({required this.component});
 }
