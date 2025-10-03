@@ -9,8 +9,15 @@ class TapDetector {
   ValueChanged<ClickEvent>? onTap;
   ValueChanged<ClickEvent>? onLongPress;
   ValueChanged? onDoubleTap;
+  ValueChanged? onHover;
 
-  TapDetector({this.onTap, this.onLongPress, this.onDoubleTap, this.debug});
+  TapDetector({
+    this.onTap,
+    this.onLongPress,
+    this.onDoubleTap,
+    this.onHover,
+    this.debug,
+  });
 
   void handlePointerEvent(PointerEvent event) {
     if (event is PointerDownEvent) {
@@ -26,10 +33,36 @@ class TapDetector {
       _second = null;
       return;
     } else if (event is PointerHoverEvent) {
-      // print('hover');
+      print('hover tap detector 1 $debug');
+      onHover?.call(null);
+      if (_first == null) return;
+      if ((_first!.down.localPosition - event.localPosition).distance >
+          tapDistance) {
+        _first = null;
+        _second = null;
+        return;
+      }
+      if (_second == null) return;
+      if ((_second!.down.localPosition - event.localPosition).distance >
+          tapDistance) {
+        _first = null;
+        _second = null;
+      }
       return;
     } else if (event is PointerMoveEvent) {
-      // print('move');
+      if (_first == null) return;
+      if ((_first!.down.localPosition - event.localPosition).distance >
+          tapDistance) {
+        _first = null;
+        _second = null;
+        return;
+      }
+      if (_second == null) return;
+      if ((_second!.down.localPosition - event.localPosition).distance >
+          tapDistance) {
+        _first = null;
+        _second = null;
+      }
       return;
     }
   }
@@ -65,7 +98,6 @@ class TapDetector {
       return;
     }
     final distance = (first.down.localPosition - event.localPosition).distance;
-    // print('distance: $distance');
     if (distance > tapDistance) {
       _first = _TapTracker(down: event, downTime: now);
       _second = null;
@@ -75,11 +107,24 @@ class TapDetector {
   }
 
   void _handleUp(PointerUpEvent event) {
+    if (_first == null) return;
+
+    {
+      final diff = DateTime.now().difference(_first!.downTime);
+      if (diff > const Duration(seconds: 3)) {
+        _first = null;
+        _second = null;
+        return;
+      }
+    }
+
     final second = _second;
     if (second != null) {
       final distance =
           (second.down.localPosition - event.localPosition).distance;
-      if (second.pointer != event.pointer || second.hasUp || distance > tapDistance) {
+      if (second.pointer != event.pointer ||
+          second.hasUp ||
+          distance > tapDistance) {
         _first = null;
         _second = null;
         return;
@@ -96,30 +141,15 @@ class TapDetector {
       return;
     }
     final distance = (first.down.localPosition - event.localPosition).distance;
-    // print('distance: $distance');
     if (distance > tapDistance) {
       _first = null;
+      _second = null;
       return;
     }
     if (first.up != null && first.up!.pointer == event.pointer) {
       return;
     }
     first.setUp(event);
-    /*Timer(const Duration(milliseconds: 100), () {
-      print('up event');
-      if (_second != null) return;
-      final first = _first;
-      if (first == null || first.pointer != event.pointer || !first.hasUp) {
-        return;
-      }
-      if (first.isLongPress) {
-        _first = null;
-        onLongPress?.call(first.makeClickEvent());
-      } else {
-        _first = null;
-        onTap?.call(first.makeClickEvent());
-      }
-    });*/
     if (first.isLongPress) {
       onLongPress?.call(first.makeClickEvent());
     } else {
@@ -160,7 +190,7 @@ class _TapTracker {
     return ClickEvent(down: down, downTime: downTime, up: up!, upTime: upTime!);
   }
 
-  static const longPressDuration = Duration(milliseconds: 1000);
+  static const longPressDuration = Duration(milliseconds: 500);
 }
 
 class ClickEvent {
@@ -169,11 +199,12 @@ class ClickEvent {
   final PointerUpEvent up;
   final DateTime upTime;
 
-  ClickEvent(
-      {required this.down,
-      required this.downTime,
-      required this.up,
-      required this.upTime});
+  ClickEvent({
+    required this.down,
+    required this.downTime,
+    required this.up,
+    required this.upTime,
+  });
 
   int get buttons => down.buttons;
 

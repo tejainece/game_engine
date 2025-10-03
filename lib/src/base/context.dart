@@ -33,7 +33,8 @@ class ComponentContext {
     }
   }
 
-  void unregisterComponent(Component component) {
+  void unregisterComponent(Component? component) {
+    if (component == null) return;
     _children.remove(component);
     if (component is PointerEventHandler) {
       _pointerEventHandlers.remove(component);
