@@ -33,7 +33,6 @@ class TapDetector {
       _second = null;
       return;
     } else if (event is PointerHoverEvent) {
-      print('hover tap detector 1 $debug');
       onHover?.call(null);
       if (_first == null) return;
       if ((_first!.down.localPosition - event.localPosition).distance >
