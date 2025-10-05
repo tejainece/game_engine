@@ -9,7 +9,7 @@ class TapDetector {
   ValueChanged<ClickEvent>? onTap;
   ValueChanged<ClickEvent>? onLongPress;
   ValueChanged? onDoubleTap;
-  ValueChanged? onHover;
+  ValueChanged<PointerHoverEvent?>? onHover;
 
   TapDetector({
     this.onTap,
@@ -19,7 +19,18 @@ class TapDetector {
     this.debug,
   });
 
-  void handlePointerEvent(PointerEvent event) {
+  bool _hovering = false;
+
+  void handlePointerEvent(PointerEvent event, bool isHit) {
+    if (!isHit || event is PointerExitEvent) {
+      _first = null;
+      _second = null;
+      if (_hovering) {
+        _hovering = false;
+        onHover?.call(null);
+      }
+      return;
+    }
     if (event is PointerDownEvent) {
       _handleDown(event);
       return;
@@ -33,7 +44,8 @@ class TapDetector {
       _second = null;
       return;
     } else if (event is PointerHoverEvent) {
-      onHover?.call(null);
+      _hovering = true;
+      onHover?.call(event);
       if (_first == null) return;
       if ((_first!.down.localPosition - event.localPosition).distance >
           tapDistance) {

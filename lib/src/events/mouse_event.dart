@@ -14,8 +14,13 @@ class MouseInteraction implements Component, PointerEventHandler, CanHitTest {
 
   ValueChanged? onDoubleTap;
 
-  MouseInteraction(
-      {required this.child, this.onMouseDown, this.onTap, this.onDoubleTap, this.onLongPress});
+  MouseInteraction({
+    required this.child,
+    this.onMouseDown,
+    this.onTap,
+    this.onDoubleTap,
+    this.onLongPress,
+  });
 
   @override
   void render(Canvas canvas) {
@@ -26,17 +31,20 @@ class MouseInteraction implements Component, PointerEventHandler, CanHitTest {
   bool hitTest(Offset point) => child.hitTest(point);
 
   late final _tapDetector = TapDetector(
-      onTap: onTap, onDoubleTap: onDoubleTap, onLongPress: onLongPress);
+    onTap: onTap,
+    onDoubleTap: onDoubleTap,
+    onLongPress: onLongPress,
+  );
 
   @override
   void handlePointerEvent(PointerEvent event) {
-    if (!hitTest(event.localPosition)) {
-      return;
+    bool hit = hitTest(event.localPosition);
+    if (hit) {
+      if (event is PointerDownEvent) {
+        onMouseDown?.call(ComponentMouseDownEvent(event));
+      }
     }
-    if(event is PointerDownEvent) {
-      onMouseDown?.call(ComponentMouseDownEvent(event));
-    }
-    _tapDetector.handlePointerEvent(event);
+    _tapDetector.handlePointerEvent(event, hit);
   }
 
   @override

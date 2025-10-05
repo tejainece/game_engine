@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:game_engine/game_engine.dart';
 import 'package:ramanujan/ramanujan.dart';
 
@@ -25,16 +28,17 @@ class GameWidget extends StatefulWidget {
 
   // TODO onScaleEnd
 
-  const GameWidget(
-      {super.key,
-      this.component,
-      this.color = Colors.black,
-      this.onResize,
-      this.transformer,
-      this.debug = false,
-      this.onTap,
-      this.onPan,
-      this.onScale});
+  const GameWidget({
+    super.key,
+    this.component,
+    this.color = Colors.black,
+    this.onResize,
+    this.transformer,
+    this.debug = false,
+    this.onTap,
+    this.onPan,
+    this.onScale,
+  });
 
   @override
   State<GameWidget> createState() => _GameWidgetState();
@@ -52,19 +56,39 @@ class _GameWidgetState extends State<GameWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onScaleStart: _detector.scaleStart,
-      onScaleUpdate: _detector.scaleUpdate,
-      onScaleEnd: _detector.scaleEnd,
-      child: _GameWidget(
-        component: widget.component,
-        color: widget.color,
-        onResize: widget.onResize,
-        transformer: widget.transformer,
-        debug: widget.debug,
-        onTap: widget.onTap,
+    return MouseRegion(
+      opaque: false,
+      hitTestBehavior: HitTestBehavior.translucent,
+      onExit: (event) {
+        _pointerExitController.add(event);
+      },
+      child: GestureDetector(
+        onScaleStart: _detector.scaleStart,
+        onScaleUpdate: _detector.scaleUpdate,
+        onScaleEnd: _detector.scaleEnd,
+        child: _GameWidget(
+          component: widget.component,
+          color: widget.color,
+          onResize: widget.onResize,
+          transformer: widget.transformer,
+          debug: widget.debug,
+          onTap: widget.onTap,
+          pointerExited: _pointerExitStream,
+        ),
       ),
     );
+  }
+
+  final StreamController<PointerExitEvent> _pointerExitController =
+      StreamController<PointerExitEvent>.broadcast();
+
+  late final Stream<PointerExitEvent> _pointerExitStream =
+      _pointerExitController.stream;
+
+  @override
+  void dispose() {
+    _pointerExitController.close();
+    super.dispose();
   }
 }
 
@@ -75,36 +99,44 @@ class _GameWidget extends LeafRenderObjectWidget {
   final Component? component;
   final bool debug;
   final ValueChanged<ClickEvent>? onTap;
+  final Stream<PointerExitEvent> pointerExited;
 
-  const _GameWidget(
-      {Key? key,
-      this.onResize,
-      this.color = Colors.black,
-      this.transformer,
-      required this.component,
-      this.debug = false,
-      this.onTap})
-      : super(key: key);
+  const _GameWidget({
+    Key? key,
+    this.onResize,
+    this.color = Colors.black,
+    this.transformer,
+    required this.component,
+    this.debug = false,
+    this.onTap,
+    required this.pointerExited,
+  }) : super(key: key);
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
       GameWidgetRenderObject(
-          onResize: onResize,
-          color: color,
-          transformer: transformer,
-          component: component,
-          debug: debug);
-
-  @override
-  void updateRenderObject(
-      BuildContext context, GameWidgetRenderObject renderObject) {
-    renderObject._update(
         onResize: onResize,
         color: color,
         transformer: transformer,
         component: component,
         debug: debug,
-        onTap: onTap);
+        pointerExited: pointerExited,
+        onTap: onTap,
+      );
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    GameWidgetRenderObject renderObject,
+  ) {
+    renderObject._update(
+      onResize: onResize,
+      color: color,
+      transformer: transformer,
+      component: component,
+      debug: debug,
+      onTap: onTap,
+    );
   }
 }
 
@@ -116,14 +148,17 @@ class GameWidgetRenderObject extends RenderBox {
   bool debug;
   CanvasTransformer? transformer;
   ValueChanged<ClickEvent>? onTap;
+  final Stream<PointerExitEvent> pointerExited;
 
-  GameWidgetRenderObject(
-      {ValueChanged<Size>? onResize,
-      required this.color,
-      required Component? component,
-      this.transformer,
-      this.debug = false,
-      this.onTap}) {
+  GameWidgetRenderObject({
+    ValueChanged<Size>? onResize,
+    required this.color,
+    required Component? component,
+    this.transformer,
+    this.debug = false,
+    this.onTap,
+    required this.pointerExited,
+  }) {
     this.onResize = onResize;
     _updateComponents(component);
   }
@@ -135,13 +170,14 @@ class GameWidgetRenderObject extends RenderBox {
     });
   }
 
-  void _update(
-      {required ValueChanged<Size>? onResize,
-      required Color color,
-      required CanvasTransformer? transformer,
-      required Component? component,
-      required bool debug,
-      required ValueChanged<ClickEvent>? onTap}) {
+  void _update({
+    required ValueChanged<Size>? onResize,
+    required Color color,
+    required CanvasTransformer? transformer,
+    required Component? component,
+    required bool debug,
+    required ValueChanged<ClickEvent>? onTap,
+  }) {
     _onResize = onResize;
     this.color = color;
     this.transformer = transformer;
@@ -200,10 +236,14 @@ class GameWidgetRenderObject extends RenderBox {
 
   @override
   void handleEvent(PointerEvent event, covariant HitTestEntry entry) {
+    _handleEvent(event);
+  }
+
+  void _handleEvent(PointerEvent event) {
     for (final handler in _ctx._pointerEventHandlers) {
       handler.handlePointerEvent(event);
     }
-    _tapDetector.handlePointerEvent(event);
+    _tapDetector.handlePointerEvent(event, true);
   }
 
   late final _tapDetector = TapDetector(
@@ -239,6 +279,10 @@ class GameWidgetRenderObject extends RenderBox {
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
+    _sub?.cancel();
+    _sub = pointerExited.listen((event) {
+      _handleEvent(event);
+    });
     _ticker.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onResize?.call(_oldSize);
@@ -248,15 +292,18 @@ class GameWidgetRenderObject extends RenderBox {
   @override
   void detach() {
     _ticker.stop();
+    _sub?.cancel();
     super.detach();
   }
 
   @override
   void dispose() {
     _ticker.stop();
-
+    _sub?.cancel();
     super.dispose();
   }
+
+  StreamSubscription? _sub;
 }
 
 typedef CanvasTransformer = void Function(Canvas canvas, Size size);
